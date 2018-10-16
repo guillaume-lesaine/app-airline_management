@@ -1,0 +1,15 @@
+{% extends 'bootstrap/base.html' %}
+
+{% block title %}
+  {% if title %}
+      <title>{{ title }} - Microblog</title>
+      {% else %}
+      <title>Welcome to Microblog</title>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div>Microblog: <a href="/index">Home</a></div>
+    <hr>
+    {% block app_content %}{% endblock %}
+{% endblock %}
