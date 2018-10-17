@@ -1,4 +1,4 @@
 mysql_host : 'localhost'
 mysql_user : 'root'
-mysql_password : 'L.Simon16011675'
+mysql_password : 
 mysql_db : 'gestion_colocataires'

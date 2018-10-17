@@ -6,5 +6,5 @@ class Config(object):
     # Configure DB
     MYSQL_HOST = 'localhost'
     MYSQL_USER = 'root'
-    MYSQL_PASSWORD = 'L.Simon16011675'
+    MYSQL_PASSWORD = 
     MYSQL_DB = 'gestion_colocataires'
