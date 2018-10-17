@@ -1,5 +1,12 @@
 # ECL_MOS4.6_GCA - Airline Management Application
 
+## Python Requirements
+
+Python 3 is used for this application. The following modules need to be installed for the app to run.
+```
+$ pip3 install re
+```
+
 ## Flask Requirements
 
 The following modules need to be installed in order to run the flask application.
