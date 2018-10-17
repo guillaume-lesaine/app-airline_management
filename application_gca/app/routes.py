@@ -27,4 +27,4 @@ def creation_airport():
         mysql.connection.commit()
         cur.close()
         return redirect('/index')
-    return render_template('creation_airport.html', title='Home', form=form)
+    return render_template('creation_airport.html', title='Création aéroport', form=form)
