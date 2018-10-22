@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+
+{% block app_content %}
+    <h1>Sign In</h1>
+    <div class="row">
+        <div class="col-md-4">
+          <form class="form" method="post" role="form">
+            {{ form.hidden_tag() }}
+            {{ wtf.form_errors(form, hiddens="only") }}
+            {{ wtf.form_field(form.numero_securite_sociale) }}
+            {{ wtf.form_field(form.nom) }}
+            {{ wtf.form_field(form.prenom) }}
+            {{ wtf.form_field(form.adresse) }}
+            {{ wtf.form_field(form.ville) }}
+            {{ wtf.form_field(form.pays) }}
+            {{ wtf.form_field(form.salaire) }}
+            {{ wtf.form_field(form.type) }}
+            {{ wtf.form_field(form.submit) }}
+          </form>
+        </div>
+    </div>
+{% endblock %}
