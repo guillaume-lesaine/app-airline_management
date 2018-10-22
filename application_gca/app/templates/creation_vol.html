@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+
+{% block app_content %}
+    <h1>Création d'un vol</h1>
+    <div class="row">
+        <!-- <div class="col-md-4"> -->
+          <form class="form" method="post" role="form">
+            <div class="col-md-8">
+            {{ form.hidden_tag() }}
+            {{ wtf.form_errors(form, hiddens="only") }}
+            {{ wtf.form_field(form.num_vol) }}
+            <br>
+            <div class="col-md-8">
+            <div class="col-md-4">
+            {{ wtf.form_field(form.ts_annee_depart) }}
+            </div>
+            <div class="col-md-2">
+            {{ wtf.form_field(form.ts_mois_depart) }}
+            </div>
+            <div class="col-md-2">
+            {{ wtf.form_field(form.ts_jour_depart) }}
+            </div>
+            <div class="col-md-2">
+            {{ wtf.form_field(form.ts_heure_depart) }}
+            </div>
+            <div class="col-md-2">
+            {{ wtf.form_field(form.ts_minute_depart) }}
+            </div>
+            </div>
+            <div class="col-md-8">
+            <div class="col-md-4">
+            {{ wtf.form_field(form.ts_annee_arrivee) }}
+            </div>
+            <div class="col-md-2">
+            {{ wtf.form_field(form.ts_mois_arrivee) }}
+            </div>
+            <div class="col-md-2">
+            {{ wtf.form_field(form.ts_jour_arrivee) }}
+            </div>
+            <div class="col-md-2">
+            {{ wtf.form_field(form.ts_heure_arrivee) }}
+            </div>
+            <div class="col-md-2">
+            {{ wtf.form_field(form.ts_minute_arrivee) }}
+            </div>
+            </div>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            {{ wtf.form_field(form.immatriculation_appareil) }}
+            {{ wtf.form_field(form.submit) }}
+            </div>
+          </form>
+    </div>
+{% endblock %}
