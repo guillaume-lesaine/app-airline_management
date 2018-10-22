@@ -22,7 +22,7 @@ $ pip3 install flask-bootstrap
 In order to launch the flask application, move to the application directory, then enter the following lines in the command line.
 
 ```
-$ set FLASK_APP='application_gca.py'
+$ set FLASK_APP=application_gca.py
 $ flask run
 ```
 
