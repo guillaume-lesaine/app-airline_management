@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+
+{% block app_content %}
+    <div>
+      <h1>Création d'un départ</h1>
+    </div>
+    <br>
+    <div>
+      Déclarer un nouveau départ.
+    </div>
+    <br>
+    <div class="row">
+        <form class="form" method="post" role="form">
+          <div class="col-md-8">
+            {{ form.hidden_tag() }}
+            {{ wtf.form_errors(form, hiddens="only") }}
+            {{ wtf.form_field(form.num_vol) }}
+            {{ wtf.form_field(form.id_liaison) }}
+            {{ wtf.form_field(form.pilotes) }}
+            {{ wtf.form_field(form.equipages) }}
+            {{ wtf.form_field(form.submit) }}
+          </div>
+        </form>
+    </div>
+{% endblock %}

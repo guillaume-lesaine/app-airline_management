@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, StringField, DecimalField, PasswordField, BooleanField, SubmitField, SelectMultipleField, widgets
+from wtforms import IntegerField, StringField, SelectField, DecimalField, PasswordField, BooleanField, SubmitField, SelectMultipleField, widgets
 from wtforms.validators import DataRequired, Optional, NumberRange, ValidationError
 
 
@@ -41,7 +41,12 @@ def minute_check(form,field):
     except:
         raise ValidationError('Entrer un nombre !')
     if x<0 or x>60:
-        raise ValidationError('0 - 60 !')
+        raise ValidationError('0 - 59 !')
+
+def personnel_check(form,field):
+    x=field.data
+    if len(x)!=2:
+        raise ValidationError('2 personnes sont nécessaires pour assurer ce poste')
 
 class AirportCreationForm(FlaskForm):
     code = StringField('Code de l\'aéroport', validators=[DataRequired()])
@@ -57,17 +62,17 @@ class EmployeeCreationForm(FlaskForm):
     ville = StringField('Ville', validators=[DataRequired()])
     pays = StringField('Pays', validators=[DataRequired()])
     salaire = DecimalField(places=2, validators=[DataRequired()])
-    type = SelectMultipleField('Type',choices=[('naviguant', 'Naviguant'), ('au_sol', 'Au sol')],validators=[DataRequired()])
+    type = SelectField('Type',choices=[('naviguant', 'Naviguant'), ('au_sol', 'Au sol')],validators=[DataRequired()])
     submit = SubmitField('Valider')
 
 class NaviguantCreationForm(FlaskForm):
     nbr_heures_vol = IntegerField('Nombre d\'heures de vol', validators=[DataRequired()])
-    fonction = SelectMultipleField('Type',choices=[('pilote', 'Pilote'), ('steward', 'Steward'), ('hotesse', 'Hôtesse')],validators=[DataRequired()])
+    fonction = SelectField('Type',choices=[('pilote', 'Pilote'), ('steward', 'Steward'), ('hotesse', 'Hôtesse')],validators=[DataRequired()])
     num_licence_pilote = IntegerField('Numéro de licence',validators=[Optional()])
     submit = SubmitField('Valider')
 
 class VolCreationForm(FlaskForm):
-    num_vol = StringField('Nombre d\'heures de vol', validators=[DataRequired()])
+    num_vol = StringField('Numéro de vol', validators=[DataRequired()])
     ts_annee_depart = StringField('Année', validators=[DataRequired(),year_check])
     ts_mois_depart = StringField('Mois', validators=[DataRequired(),month_check])
     ts_jour_depart = StringField('Jour', validators=[DataRequired(),day_check])
@@ -78,12 +83,12 @@ class VolCreationForm(FlaskForm):
     ts_jour_arrivee = StringField('Jour', validators=[DataRequired(),day_check])
     ts_heure_arrivee = StringField('Heure', validators=[DataRequired(),hour_check])
     ts_minute_arrivee = StringField('Minute', validators=[DataRequired(),minute_check])
-    immatriculation_appareil = StringField('Immatriculation appareil', validators=[DataRequired()])
+    immatriculation_appareil = SelectField('Immatriculation des appareils disponibles', validators=[DataRequired()])
     submit = SubmitField('Valider')
 
-# class SimpleForm(Form):
-#     string_of_files = ['one\r\ntwo\r\nthree\r\n']
-#     list_of_files = string_of_files[0].split()
-#     # create a list of value/description tuples
-#     files = [(x, x) for x in list_of_files]
-#     example = MultiCheckboxField('Label', choices=files)
+class DepartCreationForm(FlaskForm):
+    num_vol = SelectField('Numéros de vol disponibles', validators=[DataRequired()])
+    id_liaison = SelectField('Liaison effectuée', validators=[DataRequired()])
+    pilotes = SelectMultipleField('Pilotes disponibles',validators=[DataRequired()])
+    equipages = SelectMultipleField('Membres d\'équipage disponibles', validators=[DataRequired(),personnel_check])
+    submit = SubmitField('Valider')

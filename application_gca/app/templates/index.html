@@ -1,8 +1,34 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-    <h1>Bienvenu sur l'application</h1>
-    <div><a href="/creation/employee"><button type="button" class="btn btn-primary btn-lg">Création employé</button></a></div>
+    <div>
+      <h1>Bienvenue sur Air Centrale</h1>
+    </div>
     <br>
-    <div><a href="/creation/vol"><button type="button" class="btn btn-primary btn-lg">Création vol</button></a></div>
+    <div style="float: left; margin-bottom:30px; width: 100%">
+    <div style="float: left; width: 50%"> <h2>Création<h2>
+      <div style="float: left; width: 30%">
+      <p><a href="/creation/employee" class="btn btn-primary btn-lg btn-block" role="button">Employé</a></p>
+      <p><a href="/creation/vol" class="btn btn-primary btn-lg btn-block" role="button">Vol</a></p>
+      <p><a href="/creation/depart" class="btn btn-primary btn-lg btn-block" role="button">Départ</a></p>
+      </div>
+    </div>
+    <div style="float: left; width: 50%"> <h2>Pilotage<h2>
+      <div style="float: left; width: 30%">
+      <p><a href="/creation/employee" class="btn btn-success btn-lg btn-block" role="button">Personnel</a></p>
+      <p><a href="/creation/vol" class="btn btn-success btn-lg btn-block" role="button">Traffic</a></p>
+      <p><a href="/creation/vol" class="btn btn-success btn-lg btn-block" role="button">Appareils</a></p>
+      </div>
+    </div>
+    </div>
+    <div style="float: left; width: 100%"> <h2>Utiliser l'application</h2>
+      <br>
+      <div style="float: left; width: 100%">
+      L'application permet de gérer divers aspects de la compagnie aérienne Air Centrale. Cette gestion s'effectue selon deux axes : Création et Pilotage.
+      <ul>
+        <li><b>Création</b> vous permet de compléter la base de donnée actuelle avec de nouveaux éléments.</li>
+        <li><b>Pilotage</b> vous permet de contrôler les informations internes de la compagnie de manière thématique.</li>
+      </ul>
+      </div>
+    </div>
 {% endblock %}
