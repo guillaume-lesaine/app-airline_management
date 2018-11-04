@@ -92,3 +92,6 @@ class DepartCreationForm(FlaskForm):
     pilotes = SelectMultipleField('Pilotes disponibles',validators=[DataRequired()])
     equipages = SelectMultipleField('Membres d\'équipage disponibles', validators=[DataRequired(),personnel_check])
     submit = SubmitField('Valider')
+
+class GestionForm(FlaskForm):
+    submit = SubmitField('Valider')

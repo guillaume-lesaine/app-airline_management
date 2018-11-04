@@ -1,6 +1,6 @@
-from flask import render_template, flash, redirect, url_for
+from flask import render_template, flash, redirect, url_for, request
 from app import app
-from app.forms import AirportCreationForm, EmployeeCreationForm, NaviguantCreationForm, VolCreationForm, DepartCreationForm
+from app.forms import AirportCreationForm, EmployeeCreationForm, NaviguantCreationForm, VolCreationForm, DepartCreationForm, GestionForm
 from flask_mysqldb import MySQL
 
 mysql=MySQL(app)
@@ -9,6 +9,21 @@ mysql=MySQL(app)
 @app.route('/index')
 def index():
     return render_template('index.html', title='Home')
+
+@app.route('/gestion', methods=['GET', 'POST'])
+def gestion():
+    form=GestionForm()
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT numero_securite_sociale, nom, prenom FROM employes")
+    employes = [{'numero_securite_sociale':x[0],'nom':x[1],'prenom':x[2]} for x in cur.fetchall()]
+    cur.execute("SELECT num_vol FROM vols")
+    vols = [{'num_vol':x[0]} for x in cur.fetchall()]
+    return render_template('gestion.html', title='Gestion',form=form,employes=employes,vols=vols)
+
+@app.route('/get_suppression', methods=['POST'])
+def get_suppression():
+    print(request.get_json())
+    return('')
 
 @app.route('/creation/airport', methods=['GET', 'POST'])
 def creation_airport():

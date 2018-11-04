@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <div>
+      <h1>Gérer la base de données</h1>
+    </div>
+    <br>
+    <div>
+      Supprimer des entités de la base de données.
+    </div>
+    <br>
+    <div style="float: left; margin-bottom:10px; width: 20%">
+      <div class="dropdown">
+        <button class="btn btn-primary btn-lg dropdown-toggle" type="button" data-toggle="dropdown">Entités à modifier
+          <span class="caret"></span></button>
+          <ul class="dropdown-menu">
+            <li><a id="btn_employes" >Employés</a></li>
+            <li><a id="btn_vols" >Vols</a></li>
+            <li><a id="btn_departs" >Départs</a></li>
+          </ul>
+      </div>
+    </div>
+    <div style="float: left; margin-bottom:10px; width:80%">
+    <input id="btnGetSelected" class="btn btn-danger btn-lg" type="submit" value="Supprimer">
+    </div>
+    <table id="table_employes" class="table" style="display:none">
+    <thead>
+        <tr>
+            <th>Numéro de sécurité sociale</th>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Supprimer</th>
+        <tr>
+    </thead>
+    <tbody>
+        {% for person in employes %}
+        <tr>
+            <td>{{ person.numero_securite_sociale }}</td>
+            <td>{{ person.nom }}</td>
+            <td>{{ person.prenom }}</td>
+            <td><input type="checkbox" name="A" value={{ person.numero_securite_sociale }} ></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+  </table>
+  <table id="table_vols" class="table" style="display:none">
+  <thead>
+      <tr>
+          <th>Numéro de vol</th>
+          <th>Supprimer</th>
+      <tr>
+  </thead>
+  <tbody>
+      {% for vol in vols %}
+      <tr>
+          <td>{{ vol.num_vol}}</td>
+          <td><input type="checkbox" name="B" value={{ vol.num_vol}} ></td>
+      </tr>
+      {% endfor %}
+  </tbody>
+  </table>
+
+  <script>
+    $(document).ready(function(){
+      $('#btn_employes').click(function(){
+        $('#table_vols').hide();
+        $('#table_employes').toggle();
+        $('#table_vols').hide();
+      });
+      $('#btn_vols').click(function(){
+        $('#table_employes').hide();
+        $('#table_vols').toggle();
+        $('#table_employes').hide();
+      });
+      $("#btnGetSelected").click(function(){
+        var a = getCheckedCheckboxes('A');
+        var b = getCheckedCheckboxes('B');
+        console.log(a);
+        console.log(b);
+        var submitObject = {'A': a, 'B': b};
+        $.ajax({
+          url: "/get_suppression",
+          type: "POST",
+          data: JSON.stringify(submitObject),
+          contentType: "application/json; charset=utf-8"
+        });
+      })
+      var getCheckedCheckboxes = function(groupName){
+        var result = $('input[name="' + groupName + '"]:checked');
+        if (result.length > 0){
+          var resultString = [];
+          result.each(function(){
+            resultString.push($(this).val());
+          });
+        }
+        else {
+          var resultString = []
+        };
+        return resultString;
+      }
+    });
+  </script>
+{% endblock %}
