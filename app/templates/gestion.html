@@ -22,7 +22,9 @@
       </div>
     </div>
     <div style="float: left; margin-bottom:10px; width:80%">
+    <!-- <form action="{{ url_for('gestion') }}" > -->
     <input id="btnGetSelected" class="btn btn-danger btn-lg" type="submit" value="Supprimer">
+    <!-- </form> -->
     </div>
     <table id="table_employes" class="table" style="display:none">
     <thead>
@@ -36,10 +38,13 @@
     <tbody>
         {% for person in employes %}
         <tr>
+          {% if person.numero_securite_sociale %}
             <td>{{ person.numero_securite_sociale }}</td>
             <td>{{ person.nom }}</td>
             <td>{{ person.prenom }}</td>
             <td><input type="checkbox" name="A" value={{ person.numero_securite_sociale }} ></td>
+          {% else %}
+          {% endif %}
         </tr>
         {% endfor %}
     </tbody>
@@ -60,30 +65,60 @@
       {% endfor %}
   </tbody>
   </table>
-
+  <table id="table_departs" class="table" style="display:none">
+  <thead>
+      <tr>
+          <th>Numéro de vol</th>
+          <th>Supprimer</th>
+      <tr>
+  </thead>
+  <tbody>
+      {% for depart in departs %}
+      <tr>
+          <td>{{ depart.num_vol}}</td>
+          <td><input type="checkbox" name="C" value={{ depart.num_vol}} ></td>
+      </tr>
+      {% endfor %}
+  </tbody>
+  </table>
   <script>
     $(document).ready(function(){
       $('#btn_employes').click(function(){
         $('#table_vols').hide();
+        $('#table_departs').hide();
         $('#table_employes').toggle();
         $('#table_vols').hide();
+        $('#table_departs').hide();
       });
       $('#btn_vols').click(function(){
         $('#table_employes').hide();
+        $('#table_departs').hide();
         $('#table_vols').toggle();
         $('#table_employes').hide();
+        $('#table_departs').hide();
+      });
+      $('#btn_departs').click(function(){
+        $('#table_employes').hide();
+        $('#table_vols').hide();
+        $('#table_departs').toggle();
+        $('#table_employes').hide();
+        $('#table_vols').hide();
       });
       $("#btnGetSelected").click(function(){
         var a = getCheckedCheckboxes('A');
         var b = getCheckedCheckboxes('B');
+        var c = getCheckedCheckboxes('C');
         console.log(a);
         console.log(b);
-        var submitObject = {'A': a, 'B': b};
+        var submitObject = {'A': a, 'B': b, 'C':c};
         $.ajax({
           url: "/get_suppression",
           type: "POST",
           data: JSON.stringify(submitObject),
-          contentType: "application/json; charset=utf-8"
+          contentType: "application/json; charset=utf-8",
+          success: function(){
+            window.location.href = "gestion";
+          }
         });
       })
       var getCheckedCheckboxes = function(groupName){

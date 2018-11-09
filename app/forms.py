@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, StringField, SelectField, DecimalField, PasswordField, BooleanField, SubmitField, SelectMultipleField, widgets
-from wtforms.validators import DataRequired, Optional, NumberRange, ValidationError
+from wtforms.validators import DataRequired, Optional, NumberRange, ValidationError, Regexp
 
 
 def year_check(form, field):
@@ -48,6 +48,11 @@ def personnel_check(form,field):
     if len(x)!=2:
         raise ValidationError('2 personnes sont nécessaires pour assurer ce poste')
 
+def number_check(form,field):
+    x=field.data
+    if type(x)!=int:
+        raise ValidationError('Entrer un nombre entier !')
+
 class AirportCreationForm(FlaskForm):
     code = StringField('Code de l\'aéroport', validators=[DataRequired()])
     nom = StringField('Nom de l\'aéroport', validators=[DataRequired()])
@@ -55,14 +60,14 @@ class AirportCreationForm(FlaskForm):
 
 
 class EmployeeCreationForm(FlaskForm):
-    numero_securite_sociale=IntegerField('Numéro de sécurité sociale', validators=[DataRequired()])
-    nom = StringField('Nom', validators=[DataRequired()])
+    numero_securite_sociale=IntegerField('Numéro de sécurité sociale', validators=[DataRequired('Entrer un nombre entier !')])
+    nom = StringField('Nom', validators=[DataRequired(),Regexp(r'[A-Za-z]', flags=0, message=u'Invalid input.')])
     prenom = StringField('Prénom', validators=[DataRequired()])
     adresse = StringField('Adresse', validators=[DataRequired()])
     ville = StringField('Ville', validators=[DataRequired()])
     pays = StringField('Pays', validators=[DataRequired()])
-    salaire = DecimalField(places=2, validators=[DataRequired()])
-    type = SelectField('Type',choices=[('naviguant', 'Naviguant'), ('au_sol', 'Au sol')],validators=[DataRequired()])
+    salaire = DecimalField(places=2, validators=[DataRequired('Entrer un nombre !')])
+    type = SelectField('Type',choices=[('',' - '),('naviguant', 'Naviguant'), ('au_sol', 'Au sol')],validators=[DataRequired()])
     submit = SubmitField('Valider')
 
 class NaviguantCreationForm(FlaskForm):

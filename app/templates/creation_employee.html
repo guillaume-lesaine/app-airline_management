@@ -28,4 +28,14 @@
           </form>
         </div>
     </div>
+    <script>
+      var email = document.getElementById("test");
+      email.addEventListener("input", function (event) {
+        if (email.validity.typeMismatch) {
+          email.setCustomValidity("I expect an e-mail, darling!");
+        } else {
+          email.setCustomValidity("");
+        }
+      });
+    </script>
 {% endblock %}

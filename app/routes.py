@@ -12,31 +12,70 @@ def index():
 
 @app.route('/gestion', methods=['GET', 'POST'])
 def gestion():
-    form=GestionForm()
     cur = mysql.connection.cursor()
+    form=GestionForm()
     cur.execute("SELECT numero_securite_sociale, nom, prenom FROM employes")
     employes = [{'numero_securite_sociale':x[0],'nom':x[1],'prenom':x[2]} for x in cur.fetchall()]
     cur.execute("SELECT num_vol FROM vols")
     vols = [{'num_vol':x[0]} for x in cur.fetchall()]
-    return render_template('gestion.html', title='Gestion',form=form,employes=employes,vols=vols)
+    cur.execute("SELECT num_vol FROM departs")
+    departs = [{'num_vol':x[0]} for x in cur.fetchall()]
+    return render_template('gestion.html', title='Gestion',form=form,employes=employes,vols=vols,departs=departs)
 
-@app.route('/get_suppression', methods=['POST'])
+@app.route('/get_suppression', methods=['GET','POST'])
 def get_suppression():
-    print(request.get_json())
-    return('')
+    print('get_suppression')
+    deletion_dictionary=request.get_json()
+    deletion_employes=deletion_dictionary['A']
+    deletion_vols=deletion_dictionary['B']
+    deletion_departs=deletion_dictionary['C']
+    cur = mysql.connection.cursor()
 
-@app.route('/creation/airport', methods=['GET', 'POST'])
-def creation_airport():
-    form = AirportCreationForm()
-    if form.validate_on_submit():
-        cur = mysql.connection.cursor()
-        code = form.code.data
-        nom = form.nom.data
-        cur.execute("INSERT INTO aeroports(id_aeroports,code,nom) VALUES (DEFAULT, %s, %s)",(code,nom))
+    # SUPPRIMER DEPART
+    if deletion_departs!=[]:
+        query= 'DELETE FROM departs WHERE num_vol IN (%s)'
+        cur.execute(query, deletion_departs)
         mysql.connection.commit()
-        cur.close()
-        return redirect('/index')
-    return render_template('creation_airport.html', title='Création aéroport', form=form)
+
+    # SUPPRIMER EMPLOYÉ
+    # Check if pilote dans départs
+    for z in deletion_employes:
+        query = 'SELECT * FROM departs WHERE %s in (pilote_1,pilote_2,equipage_1,equipage_2)'
+        cur.execute(query, [z])
+        tuple_departs=cur.fetchall()
+        print(tuple_departs)
+        if tuple_departs == ():
+            pass
+        else:
+            deletion_employes.remove(z)
+            query = 'SELECT nom,prenom FROM employes WHERE numero_securite_sociale = %s'
+            cur.execute(query, [z])
+            prenom_flash,nom_flash=cur.fetchall()[0]
+            for depart in tuple_departs:
+                depart_flash=depart[0]
+                flash('{} {} apparaît dans le départ numéro {}. Veuillez supprimer ce départ.'.format(prenom_flash,nom_flash,depart_flash))
+    for z in deletion_employes:
+        query = 'SELECT * FROM naviguants WHERE numero_securite_sociale = %s'
+        cur.execute(query, [z])
+        if [x[0] for x in cur.fetchall()] == []:
+            pass
+        else: # Delete from navigant
+            query= 'DELETE FROM naviguants WHERE numero_securite_sociale = %s'
+            cur.execute(query, [z])
+            mysql.connection.commit()
+    # Delete from employé
+    print(deletion_employes)
+    if deletion_employes!=[]:
+        print(deletion_employes)
+        query= 'DELETE FROM employes WHERE numero_securite_sociale IN %s'
+        cur.execute(query, [deletion_employes])
+        mysql.connection.commit()
+        # deletion_vols=deletion_dictionary['B']
+        # cur = mysql.connection.cursor()
+        # query= 'DELETE FROM vols WHERE num_vol IN (%s)'
+        # cur.execute(query, deletion_vols)
+        # mysql.connection.commit()
+    return('')
 
 @app.route('/creation/employee', methods=['GET', 'POST'])
 def creation_employee():
@@ -55,11 +94,12 @@ def creation_employee():
             ville = form.ville.data
             pays = form.pays.data
             salaire = form.salaire.data
-            type = form.type.data[0]
+            type = form.type.data
             flash('{} {} est désormais un employé.'.format(prenom,nom))
             cur.execute("INSERT INTO employes(numero_securite_sociale,nom,prenom,adresse,ville,pays,salaire,type) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",(numero_securite_sociale,nom,prenom,adresse,ville,pays,salaire,type))
             mysql.connection.commit()
             cur.close()
+            print('//////',type)
             if type == 'naviguant':
                 return redirect(url_for('creation_employee_naviguant',numero_securite_sociale = numero_securite_sociale))
             else:
@@ -92,6 +132,9 @@ def creation_employee_naviguant(numero_securite_sociale):
 ###
 # Vol : réglage technique (temps + géographie)
 # Départ : réglage humain
+# La primary key des départs empêche de pouvoir ajouter des vols de même numéro à des
+# Vol : Numéro + liaison
+# Départ : immatriculation_appareil + Personnel + dates
 @app.route('/creation/vol', methods=['GET', 'POST'])
 def creation_vol():
     cur = mysql.connection.cursor()
