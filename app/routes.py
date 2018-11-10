@@ -10,6 +10,10 @@ mysql=MySQL(app)
 def index():
     return render_template('index.html', title='Home')
 
+@app.route('/about')
+def about():
+    return render_template('about.html', title='À propos')
+
 @app.route('/gestion', methods=['GET', 'POST'])
 def gestion():
     cur = mysql.connection.cursor()
@@ -21,6 +25,7 @@ def gestion():
     cur.execute("SELECT num_vol FROM departs")
     departs = [{'num_vol':x[0]} for x in cur.fetchall()]
     return render_template('gestion.html', title='Gestion',form=form,employes=employes,vols=vols,departs=departs)
+
 
 @app.route('/get_suppression', methods=['GET','POST'])
 def get_suppression():

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+  <style>
+  table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+  }
+
+  td, th {
+      border: 0px ;
+      text-align: left;
+      padding: 5px;
+  }
+  </style>
+    <div>
+      <h1>À propos</h1>
+    </div>
+    <br>
+    Cette application est développée dans le cadre du <b>MOD 4.6 - Bases de données</b> en dernière année à l'<b>École Centrale de Lyon</b>.<br>
+    <h3>Auteurs</h3>
+    <div style="float: left; margin-left:30px; margin-top:10px; margin-bottom:20px; width: 100%">
+    <div style="float: left; margin-left:30px; width: 45%">
+    <table>
+      <tbody>
+        <tr>
+          <td>Clémence LÉVÊCQUE</td>
+          <td>Gestion de la base de données</td>
+        </tr>
+        <tr>
+          <td>Guillaume LESAINE</td>
+          <td>Développement de l'application</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    </div>
+    <h3>Ressources</h3>
+    <div style="float: left; margin-left:30px; margin-top:10px; margin-bottom:20px; width: 100%">
+    <div style="float: left; margin-left:30px; width: 40%">
+    <table>
+      <tbody>
+        <tr>
+          <td>Source</td>
+          <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/glesaine/ECL_MOS4.6_GCA">GitHub Repository</a></td>
+        </tr>
+        <tr>
+          <td>Rapport</td>
+          <td><a href="" download>Télécharger</a></td>
+        </tr>
+        <tr>
+          <td>Back End</td>
+          <td><a target="_blank" rel="noopener noreferrer" href="http://flask.pocoo.org/">Flask</a></td>
+        </tr>
+        <tr>
+          <td>Front End</td>
+          <td><a target="_blank" rel="noopener noreferrer" href="http://getbootstrap.com/">Bootstrap</a></td>
+        </tr>
+        <tr>
+          <td>Base de données</td>
+          <td>MySQL</td>
+        </tr>
+        <tr>
+          <td>Déployment</td>
+          <td><a target="_blank" rel="noopener noreferrer" href="https://www.heroku.com/">Heroku</a></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    </div>
+{% endblock %}
