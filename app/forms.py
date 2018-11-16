@@ -78,6 +78,7 @@ class NaviguantCreationForm(FlaskForm):
 
 class VolCreationForm(FlaskForm):
     num_vol = StringField('Numéro de vol', validators=[DataRequired()])
+    id_liaison = SelectField('Liaison effectuée', validators=[DataRequired()])
     ts_annee_depart = StringField('Année', validators=[DataRequired(),year_check])
     ts_mois_depart = StringField('Mois', validators=[DataRequired(),month_check])
     ts_jour_depart = StringField('Jour', validators=[DataRequired(),day_check])
@@ -88,14 +89,13 @@ class VolCreationForm(FlaskForm):
     ts_jour_arrivee = StringField('Jour', validators=[DataRequired(),day_check])
     ts_heure_arrivee = StringField('Heure', validators=[DataRequired(),hour_check])
     ts_minute_arrivee = StringField('Minute', validators=[DataRequired(),minute_check])
-    immatriculation_appareil = SelectField('Immatriculation des appareils disponibles', validators=[DataRequired()])
     submit = SubmitField('Valider')
 
 class DepartCreationForm(FlaskForm):
     num_vol = SelectField('Numéros de vol disponibles', validators=[DataRequired()])
-    id_liaison = SelectField('Liaison effectuée', validators=[DataRequired()])
     pilotes = SelectMultipleField('Pilotes disponibles',validators=[DataRequired()])
     equipages = SelectMultipleField('Membres d\'équipage disponibles', validators=[DataRequired(),personnel_check])
+    immatriculation_appareil = SelectField('Immatriculation des appareils disponibles', validators=[DataRequired()])
     submit = SubmitField('Valider')
 
 class GestionForm(FlaskForm):

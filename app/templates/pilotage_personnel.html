@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <div>
+      <h1>Activité du personnel navigant</h1>
+    </div>
+    <br>
+    <div>
+      Sélectionner un membre du personnel navigant.
+    </div>
+    <br>
+    <div style="float: left; margin-bottom:10px; width: 20%">
+      <div class="dropdown">
+        <button class="btn btn-primary btn-lg dropdown-toggle" type="button" data-toggle="dropdown">Sélectionner un employé
+          <span class="caret"></span></button>
+          <ul class="dropdown-menu">
+            <li><a id="btn_employes" >Employés</a></li>
+            <li><a id="btn_vols" >Vols</a></li>
+            <li><a id="btn_departs" >Départs</a></li>
+          </ul>
+      </div>
+    </div>
+{% endblock %}

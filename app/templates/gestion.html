@@ -29,9 +29,11 @@
     <table id="table_employes" class="table" style="display:none">
     <thead>
         <tr>
-            <td>Développement</td>
-            <td>Base de données</td>
-            <td>Déployment</td>
+            <th>Numéro sécurité sociale</th>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Fonction</th>
+            <th>Supprimer</th>
         <tr>
     </thead>
     <tbody>
@@ -41,6 +43,7 @@
             <td>{{ person.numero_securite_sociale }}</td>
             <td>{{ person.nom }}</td>
             <td>{{ person.prenom }}</td>
+            <td>{{ person.fonction }}</td>
             <td><input type="checkbox" name="A" value={{ person.numero_securite_sociale }} ></td>
           {% else %}
           {% endif %}
@@ -52,6 +55,11 @@
   <thead>
       <tr>
           <th>Numéro de vol</th>
+          <th>Départ</th>
+          <th> </th>
+          <th>Arrivée</th>
+          <th> </th>
+          <th>Liaison effectuée</th>
           <th>Supprimer</th>
       <tr>
   </thead>
@@ -59,6 +67,11 @@
       {% for vol in vols %}
       <tr>
           <td>{{ vol.num_vol}}</td>
+          <td>{{ vol.ville_depart }}</td>
+          <td>{{ vol.ts_depart }}</td>
+          <td>{{ vol.ville_arrivee }}</td>
+          <td>{{ vol.ts_arrivee }}</td>
+          <td>{{ vol.liaison}}</td>
           <td><input type="checkbox" name="B" value={{ vol.num_vol}} ></td>
       </tr>
       {% endfor %}
@@ -67,14 +80,20 @@
   <table id="table_departs" class="table" style="display:none">
   <thead>
       <tr>
+          <th>Numéro de départ</th>
           <th>Numéro de vol</th>
+          <th>Pilotes</th>
+          <th>Équipage</th>
           <th>Supprimer</th>
       <tr>
   </thead>
   <tbody>
       {% for depart in departs %}
       <tr>
+          <td>{{ depart.id_departs}}</td>
           <td>{{ depart.num_vol}}</td>
+          <td>{{ depart.pilotes}}</td>
+          <td>{{ depart.equipage}}</td>
           <td><input type="checkbox" name="C" value={{ depart.num_vol}} ></td>
       </tr>
       {% endfor %}

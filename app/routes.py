@@ -18,13 +18,20 @@ def about():
 def gestion():
     cur = mysql.connection.cursor()
     form=GestionForm()
-    cur.execute("SELECT numero_securite_sociale, nom, prenom FROM employes")
-    employes = [{'numero_securite_sociale':x[0],'nom':x[1],'prenom':x[2]} for x in cur.fetchall()]
-    cur.execute("SELECT num_vol FROM vols")
-    vols = [{'num_vol':x[0]} for x in cur.fetchall()]
-    cur.execute("SELECT num_vol FROM departs")
-    departs = [{'num_vol':x[0]} for x in cur.fetchall()]
-    return render_template('gestion.html', title='Gestion',form=form,employes=employes,vols=vols,departs=departs)
+    cur.execute("SELECT e.numero_securite_sociale, e.nom, e.prenom, n.fonction FROM employes e JOIN naviguants n ON e.numero_securite_sociale = n.numero_securite_sociale")
+    employes = [{'numero_securite_sociale':x[0],'nom':x[1],'prenom':x[2],'fonction':x[3].title()} for x in cur.fetchall()]
+    cur.execute("SELECT num_vol,ts_depart,ts_arrivee,liaison FROM vols")
+    vols=cur.fetchall()
+    vols_display = []
+    for vol in vols:
+        cur.execute("SELECT a1.code ,a1.pays , a2.code, a2.pays FROM liaisons l JOIN aeroports a1 ON l.aeroport_origine = a1.id_aeroports JOIN aeroports a2 ON l.aeroport_destination = a2.id_aeroports WHERE l.id_liaison = %s",[vol[3]])
+        liaison = cur.fetchall()[0]
+        print(liaison)
+        liaison_display = ' - '.join((liaison[0],liaison[2]))
+        vols_display.append({'num_vol':vol[0],'ville_depart':liaison[1],'ts_depart':vol[1],'ville_arrivee':liaison[3],'ts_arrivee':vol[2],'liaison':liaison_display})
+    cur.execute("SELECT d.id_departs,d.num_vol,e1.nom,e2.nom,e3.nom,e4.nom FROM departs d JOIN employes e1 ON d.pilote_1 = e1.numero_securite_sociale JOIN employes e2 ON d.pilote_2 = e2.numero_securite_sociale JOIN employes e3 ON d.equipage_1 = e3.numero_securite_sociale JOIN employes e4 ON d.equipage_2 = e4.numero_securite_sociale")
+    departs = [{'id_departs':x[0],'num_vol':x[1],'pilotes':x[2]+' - '+x[3],'equipage':x[4]+' - '+x[5]} for x in cur.fetchall()]
+    return render_template('gestion.html', title='Gestion',form=form,employes=employes,vols=vols_display,departs=departs)
 
 
 @app.route('/get_suppression', methods=['GET','POST'])
@@ -38,8 +45,8 @@ def get_suppression():
 
     # SUPPRIMER DEPART
     if deletion_departs!=[]:
-        query= 'DELETE FROM departs WHERE num_vol IN (%s)'
-        cur.execute(query, deletion_departs)
+        query= 'DELETE FROM departs WHERE num_vol IN %s'
+        cur.execute(query, [deletion_departs])
         mysql.connection.commit()
 
     # SUPPRIMER EMPLOYÉ
@@ -75,11 +82,6 @@ def get_suppression():
         query= 'DELETE FROM employes WHERE numero_securite_sociale IN %s'
         cur.execute(query, [deletion_employes])
         mysql.connection.commit()
-        # deletion_vols=deletion_dictionary['B']
-        # cur = mysql.connection.cursor()
-        # query= 'DELETE FROM vols WHERE num_vol IN (%s)'
-        # cur.execute(query, deletion_vols)
-        # mysql.connection.commit()
     return('')
 
 @app.route('/creation/employee', methods=['GET', 'POST'])
@@ -143,14 +145,18 @@ def creation_employee_naviguant(numero_securite_sociale):
 @app.route('/creation/vol', methods=['GET', 'POST'])
 def creation_vol():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT num_immatriculation FROM appareils")
-    data = [x[0] for x in cur.fetchall()]
-    choices_immatriculation_appareil=[('',' - ')]+[(x,x) for x in data]
     form = VolCreationForm()
-    form.immatriculation_appareil.choices=choices_immatriculation_appareil
+    # Définition des liaisons disponibles
+    cur.execute("SELECT l.id_liaison, l.aeroport_origine, l.aeroport_destination, a1.code, a2.code FROM liaisons l JOIN aeroports a1 ON l.aeroport_origine = a1.id_aeroports JOIN aeroports a2 ON l.aeroport_destination = a2.id_aeroports")
+    data_request_liaisons = cur.fetchall()
+    id_liaison=[str(x[0]) for x in data_request_liaisons]
+    code_liaison=[' - '.join((x[3],x[4])) for x in data_request_liaisons]
+    choices_liaison=[('',' - ')]+[(id_liaison[i],code_liaison[i]) for i in range(len(data_request_liaisons))]
+    form.id_liaison.choices=choices_liaison
     if form.validate_on_submit():
         to_flash=[]
         num_vol = form.num_vol.data
+        id_liaison = form.id_liaison.data
         ts_annee_depart = form.ts_annee_depart.data
         ts_mois_depart = form.ts_mois_depart.data
         ts_jour_depart = form.ts_jour_depart.data
@@ -161,10 +167,9 @@ def creation_vol():
         ts_jour_arrivee = form.ts_jour_arrivee.data
         ts_heure_arrivee = form.ts_heure_arrivee.data
         ts_minute_arrivee = form.ts_minute_arrivee.data
-        immatriculation_appareil = form.immatriculation_appareil.data
         ts_depart=ts_annee_depart+'-'+ts_mois_depart+'-'+ts_jour_depart+' '+ts_heure_depart+':'+ts_minute_depart+':00'
         ts_arrivee=ts_annee_arrivee+'-'+ts_mois_arrivee+'-'+ts_jour_arrivee+' '+ts_heure_arrivee+':'+ts_minute_arrivee+':00'
-        cur.execute("INSERT INTO vols(num_vol,ts_depart,ts_arrivee,immatriculation_appareil) VALUES (%s, %s, %s, (SELECT num_immatriculation from appareils where num_immatriculation = %s))",(num_vol,ts_depart,ts_arrivee,immatriculation_appareil))
+        cur.execute("INSERT INTO vols(num_vol,ts_depart,ts_arrivee,liaison) VALUES (%s, %s, %s, %s)",(num_vol,ts_depart,ts_arrivee,id_liaison))
         mysql.connection.commit()
         cur.close()
         return redirect('/index')
@@ -172,20 +177,13 @@ def creation_vol():
 
 @app.route('/creation/depart', methods=['GET', 'POST'])
 def creation_depart():
-    form = DepartCreationForm()
     cur = mysql.connection.cursor()
+    form = DepartCreationForm()
     # Définition des vols disponibles (vérifier que le numéro n'est pas déjà affecté)
     cur.execute("SELECT num_vol FROM vols")
     data = [x[0] for x in cur.fetchall()]
     choices_num_vol=[('',' - ')]+[(x,x) for x in data]
     form.num_vol.choices=choices_num_vol
-    # Définition des liaisons disponibles
-    cur.execute("SELECT l.id_liaison, l.aeroport_origine, l.aeroport_destination, a1.code, a2.code FROM liaisons l JOIN aeroports a1 ON l.aeroport_origine = a1.id_aeroports JOIN aeroports a2 ON l.aeroport_destination = a2.id_aeroports")
-    data_request_liaisons = cur.fetchall()
-    id_liaison=[str(x[0]) for x in data_request_liaisons]
-    code_liaison=[' - '.join((x[3],x[4])) for x in data_request_liaisons]
-    choices_liaison=[('',' - ')]+[(id_liaison[i],code_liaison[i]) for i in range(len(data_request_liaisons))]
-    form.id_liaison.choices=choices_liaison
     # Définition des pilotes disponibles (trouver les pilotes se trouvant au point de départ)
     cur.execute("SELECT e.numero_securite_sociale, e.nom, e.prenom, e.type, n.nbr_heures_vol, n.fonction FROM employes e JOIN naviguants n ON e.numero_securite_sociale = n.numero_securite_sociale WHERE e.type='naviguant' AND n.fonction='pilote' AND n.nbr_heures_vol < 30")
     data_request_pilotes = cur.fetchall()
@@ -198,6 +196,11 @@ def creation_depart():
     id_equipage=[str(x[0]) for x in data_request_equipages]
     identite_equipage=[', '.join((x[1],x[2])) for x in data_request_equipages]
     form.equipages.choices=[(id_equipage[i],identite_equipage[i]) for i in range(len(data_request_equipages))]
+    # Définition des appareils disponibles
+    cur.execute("SELECT num_immatriculation FROM appareils")
+    data = [x[0] for x in cur.fetchall()]
+    choices_immatriculation_appareil=[('',' - ')]+[(x,x) for x in data]
+    form.immatriculation_appareil.choices=choices_immatriculation_appareil
     if form.validate_on_submit():
         num_vol=form.num_vol.data
         pilotes=form.pilotes.data
@@ -206,8 +209,40 @@ def creation_depart():
         equipage_1,equipage_2=int(equipages[0]),int(equipages[1])
         nbr_places_libres=0
         nbr_places_occupees=0
-        liaison=form.id_liaison.data
-        cur.execute("INSERT INTO departs(num_vol,pilote_1,pilote_2,equipage_1,equipage_2,nbr_places_libres,nbr_places_occupees,liaison) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",(num_vol,pilote_1,pilote_2,equipage_1,equipage_2,nbr_places_libres,nbr_places_occupees,liaison))
+        immatriculation_appareil = form.immatriculation_appareil.data
+        cur.execute("INSERT INTO departs(num_vol,pilote_1,pilote_2,equipage_1,equipage_2,nbr_places_libres,nbr_places_occupees,immatriculation_appareil) VALUES (%s, %s, %s, %s, %s, %s, %s, (SELECT num_immatriculation from appareils where num_immatriculation = %s))",(num_vol,pilote_1,pilote_2,equipage_1,equipage_2,nbr_places_libres,nbr_places_occupees,immatriculation_appareil))
         mysql.connection.commit()
+        cur.execute("SELECT ts_depart,ts_arrivee FROM vols WHERE num_vol = %s",[num_vol])
+        data=cur.fetchall()[0]
+        #print('ts_depart :',data[0])
+        #print('ts_arrivee :',data[1])
+        ts_depart = int(data[0].strftime('%s'))
+        ts_arrivee = int(data[1].strftime('%s'))
+        #print('ts_depart epoch :',ts_depart)
+        #print('ts_arrivee epoch :',ts_arrivee)
+        additional_flying_time = ts_arrivee - ts_depart
+        additional_flying_hours = additional_flying_time//3600
+        if additional_flying_time%3600 != 0:
+            additional_flying_hours+=1
+        for x in [pilote_1,pilote_2,equipage_1,equipage_2]:
+            #print('Numéro sécurité sociale :',x)
+            cur.execute("SELECT nbr_heures_vol FROM naviguants WHERE numero_securite_sociale = %s",[x])
+            flying_hours=cur.fetchall()[0][0]
+            #print('Old flying_hours :',flying_hours)
+            flying_hours=flying_hours+additional_flying_hours
+            cur.execute("UPDATE naviguants SET nbr_heures_vol = %s WHERE numero_securite_sociale = %s",(flying_hours,x))
+            mysql.connection.commit()
+            cur.execute("SELECT nbr_heures_vol FROM naviguants WHERE numero_securite_sociale = %s",[x])
+            flying_hours=cur.fetchall()[0][0]
+            #print('New flying_hours :',flying_hours)
         cur.close()
+        return redirect('/creation/depart_conditions')
     return render_template('creation_depart.html', title='Création départ', form=form)
+
+@app.route('/creation/depart_conditions', methods=['GET', 'POST'])
+def creation_depart_conditions():
+    return render_template('creation_depart_conditions.html', title='Création départ')
+
+@app.route('/pilotage/personnel', methods=['GET', 'POST'])
+def pilotage_personnel():
+    return render_template('pilotage_personnel.html', title='Pilotage personnel')
