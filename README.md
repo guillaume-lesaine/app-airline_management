@@ -26,11 +26,15 @@ $ set FLASK_APP=application_gca.py
 $ flask run
 ```
 
-## MySQL Monitoring
+## Git Ignore Tool
 
-Check if My SQL is running: 
+Start ignoring a file: 
 ```
-$ mysqladmin version -u root -p
+$ git update-index --assume-unchanged file_name
+```
+Stop ignoring the file:
+```
+$ git update-index --no-assume-unchanged file_name
 ```
 
 ## References
