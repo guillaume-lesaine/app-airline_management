@@ -9,4 +9,61 @@
     <div>
       Sélectionner le personnel navigant disponible pour le départ en question.
     </div>
+    <br>
+    <form class="form" method="post" role="form">
+      {{ form.hidden_tag() }}
+      {{ wtf.form_errors(form, hiddens="only") }}
+    <h3>Pilotes</h3>
+    <div style="float: left; margin-bottom:10px; width: 100%">
+    <table id="table_pilotes" class="table">
+    <thead>
+        <tr>
+          <th width="25%">Numéro sécurité sociale</th>
+          <th width="20%">Nom</th>
+          <th width="20%">Prénom</th>
+          <th width="20%">Fonction</th>
+          <th width="15%">Sélectionner</th>
+        <tr>
+    </thead>
+    <tbody>
+      {% for pilote in pilotes_disponibles %}
+      <tr>
+          <td width="25%">{{ pilote.numero_securite_sociale}}</td>
+          <td width="20%">{{ pilote.nom}}</td>
+          <td width="20%">{{ pilote.prenom }}</td>
+          <td width="20%">{{ pilote.fonction }}</td>
+          <td width="15%"><input type="checkbox" name="pilotes" value={{ pilote.numero_securite_sociale }} ></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <h3>Membres d'équipages</h3>
+  <div style="float: left; margin-bottom:10px; width: 100%">
+  <table id="table_membres" class="table">
+  <thead>
+      <tr>
+        <th width="25%">Numéro sécurité sociale</th>
+        <th width="20%">Nom</th>
+        <th width="20%">Prénom</th>
+        <th width="20%">Fonction</th>
+        <th width="15%">Sélectionner</th>
+      <tr>
+  </thead>
+  <tbody>
+    {% for membre in membres_disponibles %}
+    <tr>
+        <td width="25%">{{ membre.numero_securite_sociale}}</td>
+        <td width="20%">{{ membre.nom}}</td>
+        <td width="20%">{{ membre.prenom }}</td>
+        <td width="20%">{{ membre.fonction }}</td>
+        <td width="15%"><input type="checkbox" name="membres" value={{ membre.numero_securite_sociale }} ></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  </table>
+  </div>
+  {{ wtf.form_field(form.immatriculation_appareil) }}
+  {{ wtf.form_field(form.submit) }}
+  </form>
 {% endblock %}

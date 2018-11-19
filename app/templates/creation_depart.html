@@ -8,20 +8,40 @@
     </div>
     <br>
     <div>
-      Déclarer un nouveau départ.
+      Créer un départ en sélectionnant un vol non associé à un départ.
     </div>
     <br>
-    <div class="row">
-        <form class="form" method="post" role="form">
-          <div class="col-md-8">
-            {{ form.hidden_tag() }}
-            {{ wtf.form_errors(form, hiddens="only") }}
-            {{ wtf.form_field(form.num_vol) }}
-            {{ wtf.form_field(form.pilotes) }}
-            {{ wtf.form_field(form.equipages) }}
-            {{ wtf.form_field(form.immatriculation_appareil) }}
-            {{ wtf.form_field(form.submit) }}
-          </div>
-        </form>
-    </div>
+    <form class="form" method="post" role="form">
+      {{ form.hidden_tag() }}
+      {{ wtf.form_errors(form, hiddens="only") }}
+    <table id="table_employes" class="table">
+    <thead>
+        <tr>
+          <th>Numéro de vol</th>
+          <th>Départ</th>
+          <th> </th>
+          <th>Arrivée</th>
+          <th> </th>
+          <th>Liaison effectuée</th>
+          <th>Sélectionner</th>
+        <tr>
+    </thead>
+    <tbody>
+      {% for vol in vols %}
+      <tr>
+          <td>{{ vol.num_vol}}</td>
+          <td>{{ vol.ville_depart }}</td>
+          <td>{{ vol.ts_depart }}</td>
+          <td>{{ vol.ville_arrivee }}</td>
+          <td>{{ vol.ts_arrivee }}</td>
+          <td>{{ vol.liaison}}</td>
+          <td><input type="checkbox" name="selection" value={{ vol.num_vol }} ></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {{ wtf.form_field(form.submit) }}
+  </form>
+
+
 {% endblock %}

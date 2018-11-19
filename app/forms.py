@@ -72,7 +72,7 @@ class EmployeeCreationForm(FlaskForm):
 
 class NaviguantCreationForm(FlaskForm):
     nbr_heures_vol = IntegerField('Nombre d\'heures de vol', validators=[DataRequired()])
-    fonction = SelectField('Type',choices=[('pilote', 'Pilote'), ('steward', 'Steward'), ('hotesse', 'Hôtesse')],validators=[DataRequired()])
+    fonction = SelectField('Type',validators=[DataRequired()])
     num_licence_pilote = IntegerField('Numéro de licence',validators=[Optional()])
     submit = SubmitField('Valider')
 
@@ -84,17 +84,17 @@ class VolCreationForm(FlaskForm):
     ts_jour_depart = StringField('Jour', validators=[DataRequired(),day_check])
     ts_heure_depart = StringField('Heure', validators=[DataRequired(),hour_check])
     ts_minute_depart = StringField('Minute', validators=[DataRequired(),minute_check])
-    ts_annee_arrivee = StringField('Année', validators=[DataRequired(),year_check])
-    ts_mois_arrivee = StringField('Mois', validators=[DataRequired(),month_check])
-    ts_jour_arrivee = StringField('Jour', validators=[DataRequired(),day_check])
-    ts_heure_arrivee = StringField('Heure', validators=[DataRequired(),hour_check])
-    ts_minute_arrivee = StringField('Minute', validators=[DataRequired(),minute_check])
+    ts_vol_heures = StringField('h', validators=[DataRequired()])
+    ts_vol_minutes = StringField('min', validators=[DataRequired()])
     submit = SubmitField('Valider')
 
 class DepartCreationForm(FlaskForm):
-    num_vol = SelectField('Numéros de vol disponibles', validators=[DataRequired()])
-    pilotes = SelectMultipleField('Pilotes disponibles',validators=[DataRequired()])
-    equipages = SelectMultipleField('Membres d\'équipage disponibles', validators=[DataRequired(),personnel_check])
+    # num_vol = SelectField('Numéros de vol disponibles', validators=[DataRequired()])
+    # pilotes = SelectMultipleField('Pilotes disponibles',validators=[DataRequired()])
+    # equipages = SelectMultipleField('Membres d\'équipage disponibles', validators=[DataRequired(),personnel_check])
+    submit = SubmitField('Valider')
+
+class DepartConditionsCreationForm(FlaskForm):
     immatriculation_appareil = SelectField('Immatriculation des appareils disponibles', validators=[DataRequired()])
     submit = SubmitField('Valider')
 

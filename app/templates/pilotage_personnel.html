@@ -10,15 +10,198 @@
       Sélectionner un membre du personnel navigant.
     </div>
     <br>
-    <div style="float: left; margin-bottom:10px; width: 20%">
-      <div class="dropdown">
-        <button class="btn btn-primary btn-lg dropdown-toggle" type="button" data-toggle="dropdown">Sélectionner un employé
-          <span class="caret"></span></button>
-          <ul class="dropdown-menu">
-            <li><a id="btn_employes" >Employés</a></li>
-            <li><a id="btn_vols" >Vols</a></li>
-            <li><a id="btn_departs" >Départs</a></li>
-          </ul>
+    <div style="float: left; margin-bottom:10px; width: 100%">
+      <div id="btn_employes" style="float: left; margin-bottom:10px; width:50%">
+        <button class="btn btn-primary btn-lg" type="button" data-toggle="dropdown">Employés
+      </div>
+      <div id="btn_selection" style="float: left; margin-bottom:10px; width:40%">
+        <button class="btn btn-success btn-lg" type="button" data-toggle="dropdown">Sélectionner
       </div>
     </div>
+    <div id="table_selection" style="float: left; margin-bottom:10px; width: 100%; display:none">
+      <form>
+      <table id="table_employes" class="table">
+      <thead>
+          <tr>
+              <th>Numéro sécurité sociale</th>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <th>Fonction</th>
+              <th>Heures de vol</th>
+              <th>Position actuelle</th>
+              <th>Selectionner</th>
+          <tr>
+      </thead>
+      <tbody>
+          {% for employe in employes %}
+          <tr>
+              <td>{{ employe.numero_securite_sociale }}</td>
+              <td>{{ employe.nom }}</td>
+              <td>{{ employe.prenom }}</td>
+              <td>{{ employe.fonction }}</td>
+              <td> </td>
+              <td> </td>
+              <td><input type="radio" name="select" value={{ employe.numero_securite_sociale }} ></td>
+          </tr>
+          {% endfor %}
+      </tbody>
+    </table>
+    </form>
+    </div>
+    <div id="nom_selection" style="float: left; margin-bottom:10px; width: 100%; display:none">
+      {% for employe in employes %}
+      <div id=identite{{ employe.numero_securite_sociale }}>
+      <h2>{{employe.prenom}} {{employe.nom}}</h2>
+      </div>
+      {% endfor %}
+    </div>
+    <div id="vol_en_cours" style="float: left; margin-bottom:10px; width: 100%; display:none">
+      <h3>Vol en cours</h3>
+      {% for employe in employes %}
+      <div id=en_cours{{ employe.numero_securite_sociale }}>
+        {% for num_secu,vol in vol_en_cours.items() %}
+        {% if num_secu == employe.numero_securite_sociale %}
+        {% if vol != None %}
+        <table class="table">
+          <thead>
+            <tr>
+              <th width="25%">Numéro de vol</th>
+              <th width="25%">Liaison</th>
+              <th width="25%">Départ</th>
+              <th width="25%">Arrivée</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td width="25%">{{ vol.num_vol }}</td>
+              <td width="25%">{{ vol.liaison }}</td>
+              <td width="25%">{{ vol.ts_depart }}</td>
+              <td width="25%">{{ vol.ts_arrivee }}</td>
+            </tr>
+          </tbody>
+        </table>
+        {% else %}
+        {{employe.prenom}} {{employe.nom}} n'est pas en vol actuellement.
+        {% endif %}
+        {% else %}
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <div id="vols_prevus" style="float: left; margin-bottom:10px; width: 100%; display:none">
+      <h3>Vols à venir</h3>
+      {% for employe in employes %}
+      <div id=prevus{{ employe.numero_securite_sociale }}>
+        <table class="table">
+          <thead>
+            <tr>
+              <th width="25%">Numéro de vol</th>
+              <th width="25%">Liaison</th>
+              <th width="25%">Départ</th>
+              <th width="25%">Arrivée</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for num_secu,departs in departs_prevus.items() %}
+            {% if num_secu == employe.numero_securite_sociale %}
+            {% for depart in departs %}
+            <tr>
+              <td width="25%">{{depart.num_vol}}</td>
+              <td width="25%">{{depart.liaison}}</td>
+              <td width="25%">{{depart.ts_depart}}</td>
+              <td width="25%">{{depart.ts_arrivee}}</td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+    </div>
+    <div id="vols_passes" style="float: left; margin-bottom:10px; width: 100%; display:none">
+      <h3>Vols passés</h3>
+      {% for employe in employes %}
+      <div id=passes{{ employe.numero_securite_sociale }}>
+        <table class="table">
+          <thead>
+            <tr>
+              <th width="25%">Numéro de vol</th>
+              <th width="25%">Liaison</th>
+              <th width="25%">Départ</th>
+              <th width="25%">Arrivée</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for num_secu,departs in departs_passes.items() %}
+            {% if num_secu == employe.numero_securite_sociale %}
+            {% for depart in departs %}
+            <tr>
+              <td width="25%">{{depart.num_vol}}</td>
+              <td width="25%">{{depart.liaison}}</td>
+              <td width="25%">{{depart.ts_depart}}</td>
+              <td width="25%">{{depart.ts_arrivee}}</td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+    </div>
+    <script>
+      $(document).ready(function(){
+        $('#btn_employes').click(function(){
+          $('#table_selection').toggle();
+          $('#nom_selection').hide();
+          $('#vol_en_cours').hide();
+          $('#vols_prevus').hide();
+          $('#vols_passes').hide();
+        });
+        $('#btn_selection').click(function(){
+          $('#table_selection').hide();
+          $('#nom_selection').show();
+          $('#vol_en_cours').show();
+          $('#vols_prevus').show();
+          $('#vols_passes').show();
+        });
+      });
+      $("#btn_selection").click(function(){
+        var select = getCheckedCheckboxes('select')[0];
+        var list_js={{employes|tojson}};
+        for (var i = 0; i < list_js.length; i++) {
+          if (select ==  list_js[i].numero_securite_sociale){
+            console.log(list_js[i]);
+            $('#en_cours'+select).show();
+            $('#prevus'+select).show();
+            $('#passes'+select).show();
+            $('#identite'+select).show();
+          } else {
+            $('#en_cours'+list_js[i].numero_securite_sociale).hide();
+            $('#prevus'+list_js[i].numero_securite_sociale).hide();
+            $('#passes'+list_js[i].numero_securite_sociale).hide();
+            $('#identite'+list_js[i].numero_securite_sociale).hide();
+          }
+
+        }
+        var test_js={{employes[0]|tojson}};
+      });
+      var getCheckedCheckboxes = function(groupName){
+        var result = $('input[name="' + groupName + '"]:checked');
+        if (result.length > 0){
+          var resultString = [];
+          result.each(function(){
+            resultString.push($(this).val());
+          });
+        }
+        else {
+          var resultString = []
+        };
+        return resultString;
+      }
+    </script>
 {% endblock %}
