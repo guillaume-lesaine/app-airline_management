@@ -26,6 +26,18 @@ $ set FLASK_APP=application_gca.py
 $ flask run
 ```
 
+## Heroku Update MySQL Database
+
+Go to the git folder, then type :
+```
+heroku config
+```
+Then fill the following line
+
+```
+mysql --host=us-cdbr-east.cleardb.com --user=xxxx --password=xxxx --reconnect heroku_xxxxxx < schema.sql
+```
+
 ## Git Ignore Tool
 
 Start ignoring a file: 
