@@ -6,7 +6,7 @@ class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
 
     #Configure DB
-    MYSQL_HOST = ''
-    MYSQL_USER = ''
-    MYSQL_PASSWORD = ''
-    MYSQL_DB = ''
+    MYSQL_HOST = 'us-cdbr-iron-east-01.cleardb.net'
+    MYSQL_USER = 'bee711030d7cd2'
+    MYSQL_PASSWORD = 'd47e8ba9'
+    MYSQL_DB = 'heroku_03b85268317665c'
