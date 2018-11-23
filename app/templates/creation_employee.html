@@ -4,14 +4,14 @@
 
 {% block app_content %}
     <div>
-      <h1>Création d'un employé</h1>
+      <h1>Création d'un employé <button id="btn_information" type="button" class="btn btn-default btn-xs">?</button></h1>
     </div>
     <br>
-    <div>
+    <div id="information_form" style="display:none">
       Déclarer un nouvel employé grâce à ses données personnelles. <br> Des informations supplémentaires seront demandées si l'employé est navigant.
     </div>
     <br>
-    <div class="row">
+    <div class="row" style="float: left; margin-bottom:20px; width: 100%">
         <div class="col-md-4">
           <form class="form" method="post" role="form">
             {{ form.hidden_tag() }}
@@ -29,13 +29,10 @@
         </div>
     </div>
     <script>
-      var email = document.getElementById("test");
-      email.addEventListener("input", function (event) {
-        if (email.validity.typeMismatch) {
-          email.setCustomValidity("I expect an e-mail, darling!");
-        } else {
-          email.setCustomValidity("");
-        }
+      $(document).ready(function(){
+        $('#btn_information').click(function(){
+          $('#information_form').toggle();
+        });
       });
     </script>
 {% endblock %}

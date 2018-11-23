@@ -7,18 +7,10 @@
     </div>
     <br>
     <div>
-      Sélectionner un membre du personnel navigant.
+      Sélectionner un membre du personnel navigant pour connaitre son activité de vol.
     </div>
     <br>
-    <div style="float: left; margin-bottom:10px; width: 100%">
-      <div id="btn_employes" style="float: left; margin-bottom:10px; width:50%">
-        <button class="btn btn-primary btn-lg" type="button" data-toggle="dropdown">Employés
-      </div>
-      <div id="btn_selection" style="float: left; margin-bottom:10px; width:40%">
-        <button class="btn btn-success btn-lg" type="button" data-toggle="dropdown">Sélectionner
-      </div>
-    </div>
-    <div id="table_selection" style="float: left; margin-bottom:10px; width: 100%; display:none">
+    <div id="table_selection" style="float: left; margin-bottom:10px; width: 100%">
       <form>
       <table id="table_employes" class="table">
       <thead>
@@ -47,6 +39,9 @@
       </tbody>
     </table>
     </form>
+    </div>
+    <div id="btn_selection" style="float: left; margin-bottom:10px; width: 100%">
+        <button style="float: right; margin-right:20px" class="btn btn-success btn-lg" type="button" data-toggle="dropdown">Sélectionner
     </div>
     <div id="nom_selection" style="float: left; margin-bottom:10px; width: 100%; display:none">
       {% for employe in employes %}
@@ -153,21 +148,28 @@
       </div>
       {% endfor %}
     </div>
+    <div id="btn_employes" style="float: left; margin-bottom:10px; width:50%; display:none">
+      <button class="btn btn-primary btn-lg" type="button">Employés
+    </div>
     <script>
       $(document).ready(function(){
         $('#btn_employes').click(function(){
-          $('#table_selection').toggle();
+          $('#btn_selection').show();
+          $('#table_selection').show();
           $('#nom_selection').hide();
           $('#vol_en_cours').hide();
           $('#vols_prevus').hide();
           $('#vols_passes').hide();
+          $('#btn_employes').hide();
         });
         $('#btn_selection').click(function(){
+          $('#btn_selection').hide();
           $('#table_selection').hide();
           $('#nom_selection').show();
           $('#vol_en_cours').show();
           $('#vols_prevus').show();
           $('#vols_passes').show();
+          $('#btn_employes').show();
         });
       });
       $("#btn_selection").click(function(){

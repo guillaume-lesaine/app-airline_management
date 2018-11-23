@@ -1,33 +1,79 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-    <div>
+    <div style="float: left; text-align:center;margin-bottom:40px; width: 100%">
       <h1>Bienvenue sur Air Centrale</h1>
+      <h5>Utiliser l'application  <button id="btn_information" type="button" class="btn btn-light btn-xs"> <span class="glyphicon glyphicon-menu-right"></span></button></h5> 
     </div>
-    <br>
-    <div style="float: left; margin-bottom:30px; width: 100%">
-    <div style="float: left; width: 50%"> <h2>Création<h2>
-      <div style="float: left; width: 30%">
-      <p><a href="/creation/employee" class="btn btn-primary btn-lg btn-block" role="button">Employé</a></p>
-      <p><a href="/creation/vol" class="btn btn-primary btn-lg btn-block" role="button">Vol</a></p>
-      <p><a href="/creation/depart" class="btn btn-primary btn-lg btn-block" role="button">Départ</a></p>
+
+    <div style="float: left;margin-bottom:15px; width: 100%">
+      <div style="float: left; margin-bottom:30px; width: 33%">
+        <div style="float: left; text-align:center; width: 100%">
+          <h3>Créer</h3>
+        </div>
+        <div style="float: left; margin-left:25%; width: 50%">
+          <p><a href="/creation/employee" class="btn btn-primary btn-lg btn-block" role="button">Employé</a></p>
+          <p><a href="/creation/vol" class="btn btn-primary btn-lg btn-block" role="button">Vol</a></p>
+          <p><a href="/creation/depart" class="btn btn-primary btn-lg btn-block" role="button">Départ</a></p>
+        </div>
+      </div>
+
+      <div style="float: left; text-align:center; margin-bottom:30px; width: 33%">
+        <div style="float: left; width: 100%">
+          <h3>Visualiser</h3>
+        </div>
+        <div style="float: left; margin-left:25%; width: 50%">
+          <p><a href="/pilotage/personnel" class="btn btn-success btn-lg btn-block" role="button">Personnel</a></p>
+        </div>
+      </div>
+
+      <div style="float: left; text-align:center; margin-bottom:30px; width: 33%">
+        <div style="float: left; width: 100%">
+          <h3>Réserver</h3>
+        </div>
+        <div style="float: left; margin-left:25%; width: 50%">
+          <p><a href="/pilotage/personnel" class="btn btn-warning btn-lg btn-block" role="button">Billet</a></p>
+        </div>
       </div>
     </div>
-    <div style="float: left; width: 50%"> <h2>Pilotage<h2>
-      <div style="float: left; width: 30%">
-      <p><a href="/pilotage/personnel" class="btn btn-success btn-lg btn-block" role="button">Personnel</a></p>
+    <div id="information_application" style="float: left;margin-bottom:30px; width: 100%; display:none">
+      <div style="float: left; margin-bottom:30px; width: 33%">
+        <div style="float: left; text-align:center;margin-bottom:10px;width: 100%">
+          <span class="glyphicon glyphicon glyphicon-globe text-primary" style="font-size: 40px;"></span>
+        </div>
+        <div style="float: left; text-align:center;margin-left:20%; width: 60%">
+          <div style="float: left; width: 100%">
+            Compléter la base de données actuelle avec de nouveaux éléments.
+          </div>
+        </div>
+      </div>
+      <div style="float: left; margin-bottom:30px; width: 33%">
+        <div style="float: left;text-align:center;margin-bottom:10px;width: 100%">
+          <span class="glyphicon glyphicon-user text-success" style="font-size: 40px"></span>
+        </div>
+        <div style="float: left; text-align:center; margin-left:20%; width: 60%">
+          <div style="float: left; width: 100%">
+            Contrôler l'activité de vol du personnel navigant de la compagnie.
+          </div>
+        </div>
+      </div>
+      <div style="float: left; margin-bottom:30px; width: 33%">
+        <div style="float: left;text-align:center;margin-bottom:10px; width: 100%">
+          <span class="glyphicon glyphicon glyphicon-plane text-warning" style="font-size: 40px;"></span>
+        </div>
+        <div style="float: left;text-align:center; margin-left:20%; width: 60%">
+          <div style="float: left; width: 100%">
+            Réserver des billets pour un passager à partir d'un choix de vols.
+          </div>
+        </div>
       </div>
     </div>
     </div>
-    <div style="float: left; width: 100%"> <h2>Utiliser l'application</h2>
-      <br>
-      <div style="float: left; width: 100%">
-      L'application permet de gérer divers aspects de la compagnie aérienne Air Centrale. Cette gestion s'effectue selon deux axes : Création et Pilotage.
-      <ul>
-        <li><b>Création</b> vous permet de compléter la base de donnée actuelle avec de nouveaux éléments.</li>
-        <li><b>Pilotage</b> vous permet de contrôler les informations internes de la compagnie de manière thématique.</li>
-      </ul>
-      La fonctionalité <b>Gérer</b> vous permet de supprimer des entités dans la base de données.
-      </div>
-    </div>
+    <script>
+      $(document).ready(function(){
+        $('#btn_information').click(function(){
+          $('#information_application').fadeToggle('fast');
+        });
+      });
+    </script>
 {% endblock %}

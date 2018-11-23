@@ -3,14 +3,14 @@
 
 {% block app_content %}
     <div>
-      <h1>Création d'un vol</h1>
+      <h1>Création d'un vol <button id="btn_information" type="button" class="btn btn-default btn-xs">?</button></h1>
     </div>
     <br>
-    <div>
+    <div id="information_form" style="display:none">
       Déclarer un nouveau vol en affectant un numéro, une arrivée et un départ, ainsi qu'un appareil disponible.
     </div>
     <br>
-    <div class="row">
+    <div class="row" style="float: left; margin-bottom:20px; width: 100%">
         <form class="form" method="post" role="form">
           {{ form.hidden_tag() }}
           {{ wtf.form_errors(form, hiddens="only") }}
@@ -56,4 +56,11 @@
           </div>
         </form>
     </div>
+    <script>
+      $(document).ready(function(){
+        $('#btn_information').click(function(){
+          $('#information_form').toggle();
+        });
+      });
+    </script>
 {% endblock %}

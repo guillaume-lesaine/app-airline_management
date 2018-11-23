@@ -4,10 +4,10 @@
 
 {% block app_content %}
     <div>
-      <h1>Création d'un départ</h1>
+      <h1>Création d'un départ <button id="btn_information" type="button" class="btn btn-default btn-xs">?</button></h1>
     </div>
     <br>
-    <div>
+    <div id="information_form" style="display:none">
       Créer un départ en sélectionnant un vol non associé à un départ.
     </div>
     <br>
@@ -42,6 +42,11 @@
   </table>
   {{ wtf.form_field(form.submit) }}
   </form>
-
-
+  <script>
+    $(document).ready(function(){
+      $('#btn_information').click(function(){
+        $('#information_form').toggle();
+      });
+    });
+  </script>
 {% endblock %}

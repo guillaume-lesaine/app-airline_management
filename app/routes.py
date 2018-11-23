@@ -28,16 +28,15 @@ def gestion():
     employes = []
     for x in data :
         if x[4]!=None:
-            employes.append({'numero_securite_sociale':x[0],'nom':x[1],'prenom':x[2],'type':x[3].title(),'fonction':x[4].title()})
+            employes.append({'numero_securite_sociale':x[0],'nom':x[1].upper(),'prenom':x[2],'type':x[3].title(),'fonction':x[4].title()})
         else :
-            employes.append({'numero_securite_sociale':x[0],'nom':x[1],'prenom':x[2],'type':x[3].title(),'fonction':''})
+            employes.append({'numero_securite_sociale':x[0],'nom':x[1].upper(),'prenom':x[2],'type':x[3].title(),'fonction':''})
     cur.execute("SELECT num_vol,ts_depart,ts_arrivee,liaison FROM vols")
     vols=cur.fetchall()
     vols_display = []
     for vol in vols:
         cur.execute("SELECT a1.code ,a1.pays , a2.code, a2.pays FROM liaisons l JOIN aeroports a1 ON l.aeroport_origine = a1.id_aeroports JOIN aeroports a2 ON l.aeroport_destination = a2.id_aeroports WHERE l.id_liaison = %s",[vol[3]])
         liaison = cur.fetchall()[0]
-        print(liaison)
         liaison_display = ' - '.join((liaison[0],liaison[2]))
         vols_display.append({'num_vol':vol[0],'ville_depart':liaison[1],'ts_depart':vol[1],'ville_arrivee':liaison[3],'ts_arrivee':vol[2],'liaison':liaison_display})
     cur.execute("SELECT d.id_departs,d.num_vol,e1.nom,e2.nom,e3.nom,e4.nom FROM departs d LEFT JOIN employes e1 ON d.pilote_1 = e1.numero_securite_sociale LEFT JOIN employes e2 ON d.pilote_2 = e2.numero_securite_sociale LEFT JOIN employes e3 ON d.equipage_1 = e3.numero_securite_sociale LEFT JOIN employes e4 ON d.equipage_2 = e4.numero_securite_sociale")
@@ -50,13 +49,14 @@ def gestion():
             pilote_2 = ''
         if membre_2 == None :
             membre_2 = ''
-        departs_display.append({'id_departs':depart[0],'num_vol':depart[1],'pilotes':pilote_1+' - '+pilote_2,'equipage':membre_1+' - '+membre_2})
+        departs_display.append({'id_departs':depart[0],'num_vol':depart[1],'pilotes':pilote_1.upper()+' - '+pilote_2.upper(),'equipage':membre_1.upper()+' - '+membre_2.upper()})
     return render_template('gestion.html', title='Gestion',form=form,employes=employes,vols=vols_display,departs=departs_display)
 
-
+# get_suppression() - Transformer la soumission avec un simple post
+#------- get_suppression() - Renvoyer de l'information à l'utilisateur quand une suppression a été réalisée
+#------- get_suppression() - Couleur différente pour un message flask
 @app.route('/get_suppression', methods=['GET','POST'])
 def get_suppression():
-    print('get_suppression')
     deletion_dictionary=request.get_json()
     deletion_employes=deletion_dictionary['A']
     deletion_vols=deletion_dictionary['B']
@@ -65,46 +65,77 @@ def get_suppression():
 
     # SUPPRIMER DEPART
     if deletion_departs!=[]:
-        query= 'DELETE FROM departs WHERE num_vol IN %s'
-        cur.execute(query, [deletion_departs])
+        format_strings = ','.join(['%s'] * len(deletion_departs))
+        query= 'DELETE FROM departs WHERE num_vol IN (%s)' % format_strings
+        cur.execute(query, tuple(deletion_departs))
+        mysql.connection.commit()
+        for depart in deletion_departs:
+            flash('Le depart {} a été supprimé.'.format(depart),"alert alert-info")
+
+    # SUPPRIMER VOL
+    # Retirer tous les vols présents dans la table départs
+    if deletion_vols!=[]:
+        for z in deletion_vols:
+            query = 'SELECT * FROM departs WHERE num_vol = %s'
+            cur.execute(query, [z])
+            tuple_departs=cur.fetchall()
+            if tuple_departs == ():
+                pass
+            else :
+                deletion_vols.remove(z)
+                for depart in tuple_departs:
+                    flash('Le vol {} est associé au départ numéro {}. Veuillez supprimer ce départ.'.format(z,depart[-1]),"alert alert-danger")
+    # Supprimer les instances de vols dans la table vol
+    if deletion_vols!=[]:
+        format_strings = ','.join(['%s'] * len(deletion_vols))
+        query= 'DELETE FROM vols WHERE num_vol IN (%s)' % format_strings
+        cur.execute(query, tuple(deletion_vols))
+        for vol in deletion_vols:
+            flash('Le vol {} a été supprimé.'.format(vol),"alert alert-info")
         mysql.connection.commit()
 
     # SUPPRIMER EMPLOYÉ
-    # Check if pilote dans départs
-    for z in deletion_employes:
-        query = 'SELECT * FROM departs WHERE %s in (pilote_1,pilote_2,equipage_1,equipage_2)'
-        cur.execute(query, [z])
-        tuple_departs=cur.fetchall()
-        print(tuple_departs)
-        if tuple_departs == ():
-            pass
-        else:
-            deletion_employes.remove(z)
-            query = 'SELECT nom,prenom FROM employes WHERE numero_securite_sociale = %s'
-            cur.execute(query, [z])
-            prenom_flash,nom_flash=cur.fetchall()[0]
-            for depart in tuple_departs:
-                depart_flash=depart[0]
-                flash('{} {} apparaît dans le départ associé au numéro de vol {}. Veuillez supprimer ce départ.'.format(prenom_flash,nom_flash,depart_flash))
-    for z in deletion_employes:
-        query = 'SELECT * FROM naviguants WHERE numero_securite_sociale = %s'
-        cur.execute(query, [z])
-        if [x[0] for x in cur.fetchall()] == []:
-            pass
-        else: # Delete from navigant
-            query= 'DELETE FROM naviguants WHERE numero_securite_sociale = %s'
-            cur.execute(query, [z])
-            mysql.connection.commit()
-    # Delete from employé
-    print(deletion_employes)
     if deletion_employes!=[]:
+        # Trouver les départs concernés par les employés supprimés
+        # Retirer de la liste de suppression les employés concernés par un départ
+        for z in deletion_employes:
+            query = 'SELECT * FROM departs WHERE %s in (pilote_1,pilote_2,equipage_1,equipage_2)'
+            cur.execute(query, [z])
+            tuple_departs=cur.fetchall()
+            if tuple_departs == ():
+                pass
+            else: # Afficher avec Flash les employés apparaissant dans le départ
+                deletion_employes.remove(z)
+                query = 'SELECT nom,prenom FROM employes WHERE numero_securite_sociale = %s'
+                cur.execute(query, [z])
+                prenom_flash,nom_flash=cur.fetchall()[0]
+                for depart in tuple_departs:
+                    depart_flash=depart[0]
+                    flash('{} {} apparaît dans le départ associé au numéro de vol {}. Veuillez supprimer ce départ.'.format(prenom_flash,nom_flash,depart_flash),"alert alert-danger")
+
+        # Supprimer les instances de l'employé dans la table navigant
+        for z in deletion_employes:
+            query = 'SELECT * FROM naviguants WHERE numero_securite_sociale = %s'
+            cur.execute(query, [z])
+            if [x[0] for x in cur.fetchall()] == []:
+                pass
+            else: # Delete from navigant
+                query= 'DELETE FROM naviguants WHERE numero_securite_sociale = %s'
+                cur.execute(query, [z])
+                mysql.connection.commit()
+
+        # Supprimer les instances de l'employé dans la table employé
         print(deletion_employes)
-        query= 'DELETE FROM employes WHERE numero_securite_sociale IN %s'
-        cur.execute(query, [deletion_employes])
+        format_strings = ','.join(['%s'] * len(deletion_employes))
+        print()
+        query= 'DELETE FROM employes WHERE numero_securite_sociale IN (%s)' % format_strings
+        cur.execute(query, tuple(deletion_employes))
         mysql.connection.commit()
+        for employe in deletion_employes:
+            flash('L\'employée {} a été supprimé.'.format(employe),"alert alert-info")
     return('')
 
-# HTML - Insérer un espace à la fin du form
+#------- HTML - Insérer un espace à la fin du form
 # HTML - Rendre la consigne dynamique avec un bouton d'aide
 # MySQL - Faut-il conserver un champ salaire ?
 @app.route('/creation/employee', methods=['GET', 'POST'])
@@ -116,7 +147,7 @@ def creation_employee():
         cur.execute("SELECT numero_securite_sociale FROM employes")
         data = [x[0] for x in cur.fetchall()]
         if numero_securite_sociale in data:
-            flash('Le numéro de sécurité sociale {} existe déjà dans la base'.format(numero_securite_sociale))
+            flash('Le numéro de sécurité sociale {} existe déjà dans la base'.format(numero_securite_sociale),"alert alert-danger")
         else :
             nom = form.nom.data
             prenom = form.prenom.data
@@ -125,20 +156,17 @@ def creation_employee():
             pays = form.pays.data
             salaire = form.salaire.data
             type = form.type.data
-            flash('{} {} est désormais un employé.'.format(prenom,nom))
+            flash('{} {} est désormais un employé.'.format(prenom,nom),"alert alert-success")
             cur.execute("INSERT INTO employes(numero_securite_sociale,nom,prenom,adresse,ville,pays,salaire,type) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",(numero_securite_sociale,nom,prenom,adresse,ville,pays,salaire,type))
             mysql.connection.commit()
             cur.close()
-            print('//////',type)
             if type == 'naviguant':
                 return redirect(url_for('creation_employee_naviguant',numero_securite_sociale = numero_securite_sociale))
             else:
                 return redirect('/index')
     return render_template('creation_employee.html', title='Création employé', form=form)
 
-# NaviguantCreationForm() + HTML - Retirer le champ nombre d'heures de vol
-# MySQL - Retirer la colonne du nombre d'heures de vol dans naviguants
-# HTML - Valeur par défaut pour choix de la fonction
+# creation_employee_naviguant() - Retirer le champ d'heures de vol
 @app.route('/creation/employee/naviguant/<numero_securite_sociale>', methods=['GET', 'POST'])
 def creation_employee_naviguant(numero_securite_sociale):
     form = NaviguantCreationForm()
@@ -146,20 +174,20 @@ def creation_employee_naviguant(numero_securite_sociale):
     form.fonction.choices=choices_fonction
     if form.validate_on_submit():
         cur = mysql.connection.cursor()
-        nbr_heures_vol = form.nbr_heures_vol.data
+        nbr_heures_vol = 0
         fonction = form.fonction.data
         num_licence_pilote = form.num_licence_pilote.data
         cur.execute("SELECT num_licence_pilote FROM naviguants")
         data = [x[0] for x in cur.fetchall()]
         if fonction == 'pilote' and num_licence_pilote == None:
-            flash('Un pilote doit avoir un numéro de license')
+            flash('Un pilote doit avoir un numéro de license',"alert alert-danger")
         else :
             if num_licence_pilote in data:
-                flash('Le numéro de licence pilote {} existe déjà dans la base'.format(num_licence_pilote))
+                flash('Le numéro de licence pilote {} existe déjà dans la base'.format(num_licence_pilote),"alert alert-danger")
             else:
-                flash('Un employé naviguant a été créé.')
                 cur.execute("INSERT INTO naviguants(numero_securite_sociale,nbr_heures_vol,fonction,num_licence_pilote) VALUES (%s, %s, %s, %s)",(numero_securite_sociale,nbr_heures_vol,fonction,num_licence_pilote))
                 mysql.connection.commit()
+                flash('L\'employé naviguant {} a été créé.'.format(numero_securite_sociale),"alert alert-success")
                 cur.close()
                 return redirect('/index')
     return render_template('creation_employee_naviguant.html', title='Création employé naviguant', form=form)
@@ -168,7 +196,7 @@ def creation_employee_naviguant(numero_securite_sociale):
 #------- creation_vol() - Transformer le temps de vol en format date à partir du départ
 #------- creation_vol() - Flash message de confirmation de création
 #------- creation_vol() - Vérifier que le numéro de vol n'existe pas déjà
-# VolCreationForm() - Vérifier que le temps de vol est non nul
+#------- VolCreationForm() - Vérifier que le temps de vol est non nul
 @app.route('/creation/vol', methods=['GET', 'POST'])
 def creation_vol():
     cur = mysql.connection.cursor()
@@ -185,23 +213,34 @@ def creation_vol():
         cur.execute("SELECT * FROM vols WHERE num_vol = %s",[num_vol])
         data = cur.fetchall()
         if data!=():
-            flash('Le numéro de vol {} existe déjà dans la base, veuillez le changer.'.format(num_vol))
+            flash('Le numéro de vol {} existe déjà dans la base, veuillez le changer.'.format(num_vol),"alert alert-danger")
         else:
-            flash('Le vol numéro {} vient d\'être créé.'.format(num_vol))
+
             id_liaison = form.id_liaison.data
             ts_annee_depart = int(form.ts_annee_depart.data)
             ts_mois_depart = int(form.ts_mois_depart.data)
             ts_jour_depart = int(form.ts_jour_depart.data)
             ts_heure_depart = int(form.ts_heure_depart.data)
             ts_minute_depart = int(form.ts_minute_depart.data)
-            ts_vol = int(form.ts_vol_heures.data)*3600 + int(form.ts_vol_minutes.data)*60
-            ts_depart=datetime.datetime(ts_annee_depart,ts_mois_depart,ts_jour_depart,ts_heure_depart,ts_minute_depart,0)
-            ts_arrivee = int(ts_depart.strftime('%s')) + ts_vol
-            ts_arrivee=datetime.datetime.fromtimestamp(ts_arrivee)
-            cur.execute("INSERT INTO vols(num_vol,ts_depart,ts_arrivee,liaison) VALUES (%s, %s, %s, %s)",(num_vol,ts_depart,ts_arrivee,id_liaison))
-            mysql.connection.commit()
-            cur.close()
-            return redirect('/index')
+            ts_heures = form.ts_vol_heures.data
+            ts_minutes = form.ts_vol_minutes.data
+            if ts_heures == '':
+                ts_heures = 0
+            if ts_minutes == '':
+                ts_minutes = 0
+            ts_vol = int(ts_heures)*3600 + int(ts_minutes)*60
+            if ts_vol == 0:
+                flash('Le temps de vol ne peut pas être nul.',"alert alert-danger")
+                cur.close()
+            else:
+                ts_depart=datetime.datetime(ts_annee_depart,ts_mois_depart,ts_jour_depart,ts_heure_depart,ts_minute_depart,0)
+                ts_arrivee = int(ts_depart.strftime('%s')) + ts_vol
+                ts_arrivee=datetime.datetime.fromtimestamp(ts_arrivee)
+                cur.execute("INSERT INTO vols(num_vol,ts_depart,ts_arrivee,liaison) VALUES (%s, %s, %s, %s)",(num_vol,ts_depart,ts_arrivee,id_liaison))
+                mysql.connection.commit()
+                flash('Le vol numéro {} vient d\'être créé.'.format(num_vol),"alert alert-success")
+                cur.close()
+                return redirect('/index')
     return render_template('creation_vol.html', title='Création vol', form=form)
 
 # creation_depart() - Permettre de créer un départ sans employé
@@ -223,7 +262,6 @@ def creation_depart():
     return render_template('creation_depart.html', title='Création départ', vols=vols_display, form=form)
 
 # Requête similaire pour appareils
-# Retirer la colonne heures de vol (pas statique)
 #------- creation_depart_conditions() - Prendre en compte le temps du départ pour trouver la dernière position la position
 # creation_depart_conditions() - Gérer la création d'un départ intermédiaire
 @app.route('/creation/depart_conditions/<selected_vol>', methods=['GET', 'POST'])

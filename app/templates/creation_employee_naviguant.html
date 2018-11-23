@@ -4,11 +4,11 @@
 
 {% block app_content %}
     <div>
-      <h1>Création d'un employé navigant</h1>
+      <h1>Création d'un employé navigant <button id="btn_information" type="button" class="btn btn-default btn-xs">?</button></h1>
     </div>
     <br>
-    <div>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    <div id="information_form" style="display:none">
+      Vous venez de créer un employé navigant. Veuillez compléter ses informations.
     </div>
     <br>
     <div class="row">
@@ -16,11 +16,17 @@
           <form class="form" method="post" role="form">
             {{ form.hidden_tag() }}
             {{ wtf.form_errors(form, hiddens="only") }}
-            {{ wtf.form_field(form.nbr_heures_vol) }}
             {{ wtf.form_field(form.fonction) }}
             {{ wtf.form_field(form.num_licence_pilote) }}
             {{ wtf.form_field(form.submit) }}
           </form>
         </div>
     </div>
+    <script>
+      $(document).ready(function(){
+        $('#btn_information').click(function(){
+          $('#information_form').toggle();
+        });
+      });
+    </script>
 {% endblock %}
