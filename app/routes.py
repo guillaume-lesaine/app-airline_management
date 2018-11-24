@@ -10,13 +10,13 @@ mysql=MySQL(app)
 # HTML - Affichage en ligne des menus création et pilotage
 # HTML - Rendre la présentation de l'application de l'application dynamique avec un bouton d'aide
 @app.route('/')
-@app.route('/index')
-def index():
-    return render_template('index.html', title='Home')
+@app.route('/accueil')
+def accueil():
+    return render_template('accueil.html', title='Air Centrale - Accueil')
 
-@app.route('/about')
-def about():
-    return render_template('about.html', title='À propos')
+@app.route('/ressources')
+def ressources():
+    return render_template('ressources.html', title='Air Centrale - Ressources')
 
 #------- gerer() - Faire un LEFT join de manière à aussi prendre en compte les employés non navigants et ceux incomplets
 @app.route('/gerer', methods=['GET', 'POST'])
@@ -50,7 +50,7 @@ def gerer():
         if membre_2 == None :
             membre_2 = ''
         departs_display.append({'id_departs':depart[0],'num_vol':depart[1],'pilotes':pilote_1.upper()+' - '+pilote_2.upper(),'equipage':membre_1.upper()+' - '+membre_2.upper()})
-    return render_template('gerer.html', title='Gestion',form=form,employes=employes,vols=vols_display,departs=departs_display)
+    return render_template('gerer.html', title='Air Centrale - Gérer',form=form,employes=employes,vols=vols_display,departs=departs_display)
 
 # get_suppression() - Transformer la soumission avec un simple post
 #------- get_suppression() - Renvoyer de l'information à l'utilisateur quand une suppression a été réalisée
@@ -164,7 +164,7 @@ def creer_employe():
                 return redirect(url_for('creer_employe_navigant',numero_securite_sociale = numero_securite_sociale))
             else:
                 return redirect('/index')
-    return render_template('creer_employe.html', title='Création employé', form=form)
+    return render_template('creer_employe.html', title='Air Centrale - Créer employé', form=form)
 
 # creer_employe_navigant() - Retirer le champ d'heures de vol
 @app.route('/creer/employe/navigant/<numero_securite_sociale>', methods=['GET', 'POST'])
@@ -190,7 +190,7 @@ def creer_employe_navigant(numero_securite_sociale):
                 flash('L\'employé naviguant {} a été créé.'.format(numero_securite_sociale),"alert alert-info")
                 cur.close()
                 return redirect('/index')
-    return render_template('creer_employe_navigant.html', title='Création employé naviguant', form=form)
+    return render_template('creer_employe_navigant.html', title='Air Centrale - Créer employé naviguant', form=form)
 
 #------- VolCreationForm() + HTML - Demander un temps de vol plutôt qu'une date d'arrivée
 #------- creer_vol() - Transformer le temps de vol en format date à partir du départ
@@ -241,7 +241,7 @@ def creer_vol():
                 flash('Le vol numéro {} vient d\'être créé.'.format(num_vol),"alert alert-info")
                 cur.close()
                 return redirect('/index')
-    return render_template('creer_vol.html', title='Création vol', form=form)
+    return render_template('creer_vol.html', title='Air Centrale - Créer vol', form=form)
 
 # creer_depart() - Permettre de créer un départ sans employé
 @app.route('/creer/depart', methods=['GET', 'POST'])
@@ -259,7 +259,7 @@ def creer_depart():
     if form.validate_on_submit():
         selected_vol = request.form.getlist('selection')[0]
         return redirect(url_for('creer_depart_conditions',selected_vol = selected_vol))
-    return render_template('creer_depart.html', title='Création départ', vols=vols_display, form=form)
+    return render_template('creer_depart.html', title='Air Centrale - Créer départ', vols=vols_display, form=form)
 
 # Requête similaire pour appareils
 #------- creer_depart_conditions() - Prendre en compte le temps du départ pour trouver la dernière position la position
@@ -353,11 +353,11 @@ def creer_depart_conditions(selected_vol):
             return redirect('/index')
     # Less than 30 hours of flight with addition
     # In the right country at the right moment
-    return render_template('creer_depart_conditions.html', title='Création départ', form = form, pilotes_disponibles = pilotes_disponibles,membres_disponibles = membres_disponibles)
+    return render_template('creer_depart_conditions.html', title='Air Centrale - Créer départ conditions', form = form, pilotes_disponibles = pilotes_disponibles,membres_disponibles = membres_disponibles)
 
-# pilotage_personnel() - Ranger vols prévus par ordre de proximité en temps
-#------- pilotage_personnel() - Afficher les vols passés
-#------- HTML + pilotage_personnel() - Montrer les vols passés
+# visualiser_personnel() - Ranger vols prévus par ordre de proximité en temps
+#------- visualiser_personnel() - Afficher les vols passés
+#------- HTML + visualiser_personnel() - Montrer les vols passés
 #------- HTML - Afficher nom de la personne quand sélectionnée
 #------- HTML - Mettre colonnes à la même taille
 @app.route('/visualiser/personnel', methods=['GET', 'POST'])
@@ -408,4 +408,4 @@ def visualiser_personnel():
             for depart in departs_passes:
                 departs_passes_list.append({'num_vol':depart[0],'ts_depart':depart[1],'ts_arrivee':depart[2],'liaison':depart[3]+' - '+depart[4]})
             passes_display[str(employe[0])] = departs_passes_list
-    return render_template('pilotage_personnel.html', title='Pilotage personnel',employes=employes_display,vol_en_cours=vol_en_cours,departs_prevus=prevus_display,departs_passes=passes_display)
+    return render_template('visualiser_personnel.html', title='Air Centrale - Visualiser personnel',employes=employes_display,vol_en_cours=vol_en_cours,departs_prevus=prevus_display,departs_passes=passes_display)
