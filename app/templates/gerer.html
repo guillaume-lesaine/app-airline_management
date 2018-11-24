@@ -12,7 +12,7 @@
     <br>
     <div style="float: left; margin-bottom:10px; width: 20%">
       <div class="dropdown">
-        <button class="btn btn-primary btn-lg dropdown-toggle" type="button" data-toggle="dropdown">Entités à supprimer
+        <button class="btn btn-primary btn-lg dropdown-toggle" type="button" data-toggle="dropdown">Sélectionner entité
           <span class="caret"></span></button>
           <ul class="dropdown-menu">
             <li><a id="btn_employes" >Employés</a></li>
@@ -135,7 +135,7 @@
           data: JSON.stringify(submitObject),
           contentType: "application/json; charset=utf-8",
           success: function(){
-            window.location.href = "gestion";
+            window.location.href = "gerer";
           }
         });
       })
