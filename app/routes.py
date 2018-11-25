@@ -1,14 +1,14 @@
 from flask import render_template, flash, redirect, url_for, request
 from app import app
-from app.forms import AirportCreationForm, EmployeeCreationForm, NaviguantCreationForm, VolCreationForm, DepartCreationForm, DepartConditionsCreationForm, GestionForm
+from app.forms import AirportCreationForm, EmployeeCreationForm, NaviguantCreationForm, VolCreationForm, DepartCreationForm, DepartConditionsCreationForm, GestionForm, BilletReservationForm, BilletConditionsReservationForm
 from flask_mysqldb import MySQL
 
 import datetime
 
 mysql=MySQL(app)
 
-# HTML - Affichage en ligne des menus création et pilotage
-# HTML - Rendre la présentation de l'application de l'application dynamique avec un bouton d'aide
+#------- HTML - Affichage en ligne des menus création et pilotage
+#------- HTML - Rendre la présentation de l'application de l'application dynamique avec un bouton d'aide
 @app.route('/')
 @app.route('/accueil')
 def accueil():
@@ -19,6 +19,7 @@ def ressources():
     return render_template('ressources.html', title='Air Centrale - Ressources')
 
 #------- gerer() - Faire un LEFT join de manière à aussi prendre en compte les employés non navigants et ceux incomplets
+# gerer() - Ajouter la suppression des billets
 @app.route('/gerer', methods=['GET', 'POST'])
 def gerer():
     cur = mysql.connection.cursor()
@@ -52,7 +53,6 @@ def gerer():
         departs_display.append({'id_departs':depart[0],'num_vol':depart[1],'pilotes':pilote_1.upper()+' - '+pilote_2.upper(),'equipage':membre_1.upper()+' - '+membre_2.upper()})
     return render_template('gerer.html', title='Air Centrale - Gérer',form=form,employes=employes,vols=vols_display,departs=departs_display)
 
-# get_suppression() - Transformer la soumission avec un simple post
 #------- get_suppression() - Renvoyer de l'information à l'utilisateur quand une suppression a été réalisée
 #------- get_suppression() - Couleur différente pour un message flask
 @app.route('/get_suppression', methods=['GET','POST'])
@@ -136,7 +136,7 @@ def get_suppression():
     return('')
 
 #------- HTML - Insérer un espace à la fin du form
-# HTML - Rendre la consigne dynamique avec un bouton d'aide
+#------- HTML - Rendre la consigne dynamique avec un bouton d'aide
 # MySQL - Faut-il conserver un champ salaire ?
 @app.route('/creer/employe', methods=['GET', 'POST'])
 def creer_employe():
@@ -166,7 +166,6 @@ def creer_employe():
                 return redirect('/index')
     return render_template('creer_employe.html', title='Air Centrale - Créer employé', form=form)
 
-# creer_employe_navigant() - Retirer le champ d'heures de vol
 @app.route('/creer/employe/navigant/<numero_securite_sociale>', methods=['GET', 'POST'])
 def creer_employe_navigant(numero_securite_sociale):
     form = NaviguantCreationForm()
@@ -243,7 +242,6 @@ def creer_vol():
                 return redirect('/index')
     return render_template('creer_vol.html', title='Air Centrale - Créer vol', form=form)
 
-# creer_depart() - Permettre de créer un départ sans employé
 @app.route('/creer/depart', methods=['GET', 'POST'])
 def creer_depart():
     cur = mysql.connection.cursor()
@@ -261,9 +259,10 @@ def creer_depart():
         return redirect(url_for('creer_depart_conditions',selected_vol = selected_vol))
     return render_template('creer_depart.html', title='Air Centrale - Créer départ', vols=vols_display, form=form)
 
-# Requête similaire pour appareils
+# creer_depart_conditions() - Requête similaire pour appareils
 #------- creer_depart_conditions() - Prendre en compte le temps du départ pour trouver la dernière position la position
 # creer_depart_conditions() - Gérer la création d'un départ intermédiaire
+# creer_depart_conditions() - Fixer un nombre de places dipsonibles et un nombre de place
 @app.route('/creer/depart/conditions/<selected_vol>', methods=['GET', 'POST'])
 def creer_depart_conditions(selected_vol):
     cur = mysql.connection.cursor()
@@ -355,7 +354,6 @@ def creer_depart_conditions(selected_vol):
     # In the right country at the right moment
     return render_template('creer_depart_conditions.html', title='Air Centrale - Créer départ conditions', form = form, pilotes_disponibles = pilotes_disponibles,membres_disponibles = membres_disponibles)
 
-# visualiser_personnel() - Ranger vols prévus par ordre de proximité en temps
 #------- visualiser_personnel() - Afficher les vols passés
 #------- HTML + visualiser_personnel() - Montrer les vols passés
 #------- HTML - Afficher nom de la personne quand sélectionnée
@@ -409,3 +407,35 @@ def visualiser_personnel():
                 departs_passes_list.append({'num_vol':depart[0],'ts_depart':depart[1],'ts_arrivee':depart[2],'liaison':depart[3]+' - '+depart[4]})
             passes_display[str(employe[0])] = departs_passes_list
     return render_template('visualiser_personnel.html', title='Air Centrale - Visualiser personnel',employes=employes_display,vol_en_cours=vol_en_cours,departs_prevus=prevus_display,departs_passes=passes_display)
+
+@app.route('/reserver/billet', methods=['GET', 'POST'])
+def reserver_billet():
+    cur = mysql.connection.cursor()
+    form = BilletReservationForm()
+    cur.execute("SELECT d.id_departs,v.ts_depart,v.ts_arrivee,v.liaison,d.nbr_places_libres FROM vols v JOIN departs d ON v.num_vol = d.num_vol WHERE d.nbr_places_libres > 0")
+    departs=cur.fetchall()
+    departs_display = []
+    for depart in departs:
+        cur.execute("SELECT a1.code ,a1.pays , a2.code, a2.pays FROM liaisons l JOIN aeroports a1 ON l.aeroport_origine = a1.id_aeroports JOIN aeroports a2 ON l.aeroport_destination = a2.id_aeroports WHERE l.id_liaison = %s",[depart[3]])
+        liaison = cur.fetchall()[0]
+        liaison_display = ' - '.join((liaison[0],liaison[2]))
+        departs_display.append({'id_depart':depart[0],'ville_depart':liaison[1],'ts_depart':depart[1],'ville_arrivee':liaison[3],'ts_arrivee':depart[2],'liaison':liaison_display,'places_libres':depart[3]})
+    if form.validate_on_submit():
+        selected_depart = request.form.getlist('selection')[0]
+        return redirect(url_for('reserver_billet_conditions',selected_depart = selected_depart))
+    return render_template('reserver_billet.html', title='Air Centrale - Reserver billet',form=form,departs=departs_display)
+
+# reserver_billet_conditions() - Modifier de 1 le nombre de places disponibles
+@app.route('/reserver/billet/conditions/<selected_depart>', methods=['GET', 'POST'])
+def reserver_billet_conditions(selected_depart):
+    cur = mysql.connection.cursor()
+    form = BilletConditionsReservationForm()
+    cur.execute("SELECT d.id_departs,v.ts_depart,v.ts_arrivee,v.liaison FROM departs d JOIN vols v ON d.num_vol = v.num_vol WHERE d.id_departs = %s",[selected_depart])
+    depart = cur.fetchall()[0]
+    cur.execute("SELECT a1.code ,a1.pays , a2.code, a2.pays FROM liaisons l JOIN aeroports a1 ON l.aeroport_origine = a1.id_aeroports JOIN aeroports a2 ON l.aeroport_destination = a2.id_aeroports WHERE l.id_liaison = %s",[depart[3]])
+    liaison = cur.fetchall()[0]
+    liaison_display = ' - '.join((liaison[0],liaison[2]))
+    travel_information = {'id_depart':depart[0],'ville_depart':liaison[1],'ts_depart':depart[1],'ville_arrivee':liaison[3],'ts_arrivee':depart[2],'liaison':liaison_display}
+    if form.validate_on_submit():
+        return redirect(url_for('accueil'))
+    return render_template('reserver_billet_conditions.html', title='Air Centrale - Reserver billet',form=form,depart=travel_information)

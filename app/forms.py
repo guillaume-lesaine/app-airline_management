@@ -96,3 +96,9 @@ class DepartConditionsCreationForm(FlaskForm):
 
 class GestionForm(FlaskForm):
     submit = SubmitField('Valider')
+
+class BilletReservationForm(FlaskForm):
+    submit = SubmitField('Valider')
+
+class BilletConditionsReservationForm(FlaskForm):
+    submit = SubmitField('Valider')
