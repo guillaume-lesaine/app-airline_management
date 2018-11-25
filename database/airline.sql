@@ -2,7 +2,7 @@
 --
 -- Host: localhost    Database: airline
 -- ------------------------------------------------------
--- Server version	5.7.24-0ubuntu0.16.04.1
+-- Server version	5.7.24-0ubuntu0.18.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -77,13 +77,12 @@ CREATE TABLE `billets` (
   `num_billet` bigint(16) NOT NULL,
   `prix` decimal(4,0) DEFAULT NULL,
   `ts_emission` datetime DEFAULT NULL,
-  `num_depart` varchar(45) DEFAULT NULL,
+  `num_depart` int(11) DEFAULT NULL,
   `num_passager` int(11) DEFAULT NULL,
-  PRIMARY KEY (`num_billet`),
   KEY `num_depart_idx` (`num_depart`),
   KEY `num_client_idx` (`num_passager`),
   CONSTRAINT `num_client` FOREIGN KEY (`num_passager`) REFERENCES `passagers` (`id_passager`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `num_depart` FOREIGN KEY (`num_depart`) REFERENCES `departs` (`num_vol`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `num_depart` FOREIGN KEY (`num_depart`) REFERENCES `departs` (`id_departs`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -93,7 +92,7 @@ CREATE TABLE `billets` (
 
 LOCK TABLES `billets` WRITE;
 /*!40000 ALTER TABLE `billets` DISABLE KEYS */;
-INSERT INTO `billets` VALUES (165746583,61,'2018-08-26 08:40:00','AFR7644',1),(1085015469,45,'2018-07-04 11:23:00','AFR7644',2),(1875414696,420,'2018-05-06 15:05:00','AFR348',3),(2489475802,45,'2018-07-07 17:54:00','AFR7644',4),(5302972100,570,'2018-09-06 15:05:00','AFR348',4);
+INSERT INTO `billets` VALUES (165746583,61,'2018-08-26 08:40:00',2,1),(1085015469,45,'2018-07-04 11:23:00',2,2),(1875414696,420,'2018-05-06 15:05:00',1,3),(5164348346,45,'2018-07-07 17:54:00',2,4),(5302972100,570,'2018-09-06 15:05:00',2,5);
 /*!40000 ALTER TABLE `billets` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -127,7 +126,7 @@ CREATE TABLE `departs` (
   CONSTRAINT `num_vol` FOREIGN KEY (`num_vol`) REFERENCES `vols` (`num_vol`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `pilote_1` FOREIGN KEY (`pilote_1`) REFERENCES `employes` (`numero_securite_sociale`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `pilote_2` FOREIGN KEY (`pilote_2`) REFERENCES `employes` (`numero_securite_sociale`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -291,4 +290,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-11-15 18:31:59
+-- Dump completed on 2018-11-25 23:32:41
