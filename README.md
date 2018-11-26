@@ -35,7 +35,7 @@ heroku config
 Then fill the following line
 
 ```
-mysql --host=us-cdbr-east.cleardb.com --user=xxxx --password=xxxx --reconnect heroku_xxxxxx < schema.sql
+mysql --host=xxxx --user=xxxx --password=xxxx --reconnect heroku_xxxx < schema.sql
 ```
 
 ## Git Ignore Tool
