@@ -50,9 +50,9 @@ DROP TABLE IF EXISTS `appareils`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `appareils` (
-  `num_immatriculation` varchar(45) NOT NULL,
+  `immatriculation` varchar(45) NOT NULL,
   `type` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`num_immatriculation`)
+  PRIMARY KEY (`immatriculation`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -110,19 +110,18 @@ CREATE TABLE `departs` (
   `equipage_1` bigint(16) DEFAULT NULL,
   `equipage_2` bigint(16) DEFAULT NULL,
   `nbr_places_libres` int(11) DEFAULT NULL,
-  `nbr_places_occupees` int(11) DEFAULT NULL,
-  `immatriculation_appareil` varchar(45) DEFAULT NULL,
+  `immatriculation` varchar(45) DEFAULT NULL,
   `id_departs` int(11) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id_departs`),
   KEY `pilote_1_idx` (`pilote_1`),
   KEY `pilote_2_idx` (`pilote_2`),
   KEY `equipage_1_idx` (`equipage_1`),
   KEY `equipage_2_idx` (`equipage_2`),
-  KEY `immaculation_appareil_idx` (`immatriculation_appareil`),
+  KEY `immaculation_appareil_idx` (`immatriculation`),
   KEY `num_vol_idx` (`num_vol`),
   CONSTRAINT `equipage_1` FOREIGN KEY (`equipage_1`) REFERENCES `employes` (`numero_securite_sociale`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `equipage_2` FOREIGN KEY (`equipage_2`) REFERENCES `employes` (`numero_securite_sociale`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `immaculation_appareil` FOREIGN KEY (`immatriculation_appareil`) REFERENCES `appareils` (`num_immatriculation`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `immaculation_appareil` FOREIGN KEY (`immatriculation`) REFERENCES `appareils` (`immatriculation`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `num_vol` FOREIGN KEY (`num_vol`) REFERENCES `vols` (`num_vol`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `pilote_1` FOREIGN KEY (`pilote_1`) REFERENCES `employes` (`numero_securite_sociale`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `pilote_2` FOREIGN KEY (`pilote_2`) REFERENCES `employes` (`numero_securite_sociale`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -135,7 +134,7 @@ CREATE TABLE `departs` (
 
 LOCK TABLES `departs` WRITE;
 /*!40000 ALTER TABLE `departs` DISABLE KEYS */;
-INSERT INTO `departs` VALUES ('AFR348',191851249560845,163577693139738,174718143121594,292635691720225,23,342,'A5ZZ',1),('AFR7644',275964135451744,182942912944414,293109716948355,282123825733664,6,61,'F-GKXO',2),('DAL405',191851249560845,189145542576748,293109716948355,293109716948355,1,47,'N1BC',3);
+INSERT INTO `departs` VALUES ('AFR348',191851249560845,163577693139738,174718143121594,292635691720225,23,'A5ZZ',1),('AFR7644',275964135451744,182942912944414,293109716948355,282123825733664,6,'F-GKXO',2),('DAL405',191851249560845,189145542576748,293109716948355,293109716948355,1,'N1BC',3);
 /*!40000 ALTER TABLE `departs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -165,7 +164,7 @@ CREATE TABLE `employes` (
 
 LOCK TABLES `employes` WRITE;
 /*!40000 ALTER TABLE `employes` DISABLE KEYS */;
-INSERT INTO `employes` VALUES (163577693139738,'Quentin','Petit','6 avenue du Bois','Lille','France',4200,'naviguant'),(174718143121594,'David','Bertrand','11 rue du Bout du Chemin','Amiens','France',2900,'naviguant'),(178019734623941,'Grégoire','Pierre','12 rue de Paris','Orléans','France',3000,'au_sol'),(182942912944414,'Aymerick','Jean','23 North Av.','Berlin','Allemagne',5100,'naviguant'),(189145542576748,'Mark','Porter','63-8059 Donec St','New-York','États-Unis',5000,'naviguant'),(191851249560845,'Alexandre','Martin','8 rue Cul de Sac','Rennes','France',6000,'naviguant'),(275964135451744,'Jeanne','Fournier','12 rue Victorien Sardou','Lyon','France',6500,'naviguant'),(282123825733664,'Marie','Dubois','45 cours Lafayette','Lyon','France',2500,'au_sol'),(292108643334472,'Helena','Martinez','4302 Montes, Av.','Madrid','Espagne',3200,'naviguant'),(292635691720225,'Helen','Parker','7895 Sagittis Avenue','Londres','Royaume-Uni',3600,'naviguant'),(293109716948355,'Angele','Perrin','3666 Non, St.','Amsterdam','Pays-Bas',3800,'naviguant');
+INSERT INTO `employes` VALUES (163577693139738,'Quentin','Petit','6 avenue du Bois','Lille','France',4200,'naviguant'),(174718143121594,'David','Bertrand','11 rue du Bout du Chemin','Amiens','France',2900,'naviguant'),(178019734623941,'Grégoire','Pierre','12 rue de Paris','Orléans','France',3000,'au_sol'),(182942912944414,'Aymerick','Jean','23 North Av.','Berlin','Allemagne',5100,'naviguant'),(189145542576748,'Mark','Porter','63-8059 Donec St','New-York','États-Unis',5000,'naviguant'),(191851249560845,'Alexandre','Martin','8 rue Cul de Sac','Rennes','France',6000,'naviguant'),(256898512354692,'Mireille','Mathieu','4 avenue du Général de Gaulle','Roubaix','France',2350,'naviguant'),(275964135451744,'Jeanne','Fournier','12 rue Victorien Sardou','Lyon','France',6500,'naviguant'),(282123825733664,'Marie','Dubois','45 cours Lafayette','Lyon','France',2500,'au_sol'),(292108643334472,'Helena','Martinez','4302 Montes, Av.','Madrid','Espagne',3200,'naviguant'),(292635691720225,'Helen','Parker','7895 Sagittis Avenue','Londres','Royaume-Uni',3600,'naviguant'),(293109716948355,'Angele','Perrin','3666 Non, St.','Amsterdam','Pays-Bas',3800,'naviguant');
 /*!40000 ALTER TABLE `employes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -221,7 +220,7 @@ CREATE TABLE `naviguants` (
 
 LOCK TABLES `naviguants` WRITE;
 /*!40000 ALTER TABLE `naviguants` DISABLE KEYS */;
-INSERT INTO `naviguants` VALUES (163577693139738,12,'pilote',7045185),(174718143121594,8,'stewart',NULL),(182942912944414,24,'pilote',1128094),(189145542576748,15,'pilote',5884764),(191851249560845,11,'pilote',1316780),(275964135451744,5,'pilote',4926286),(292108643334472,18,'hôtesse',NULL),(292635691720225,7,'hôtesse',NULL),(293109716948355,17,'hôtesse',NULL);
+INSERT INTO `naviguants` VALUES (163577693139738,12,'pilote',7045185),(174718143121594,8,'stewart',NULL),(182942912944414,24,'pilote',1128094),(189145542576748,15,'pilote',5884764),(191851249560845,11,'pilote',1316780),(256898512354692,0,'hôtesse',NULL),(275964135451744,5,'pilote',4926286),(292108643334472,18,'hôtesse',NULL),(292635691720225,7,'hôtesse',NULL),(293109716948355,17,'hôtesse',NULL);
 /*!40000 ALTER TABLE `naviguants` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -290,4 +289,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-11-25 23:32:41
+-- Dump completed on 2018-11-27 23:17:25
