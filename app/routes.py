@@ -39,9 +39,6 @@ def executeScriptsFromFile(filename,TS_DEPART_NV_VOL,TS_ARRIVEE_NV_VOL,TPS_VOL,N
 @app.route('/')
 @app.route('/accueil')
 def accueil():
-    nbr_heures_vol = (int(datetime.datetime(2018, 10, 19, 5, 15, 0).strftime('%s')) - int(datetime.datetime(2018, 10, 18, 17, 35, 0).strftime('%s')))//3600
-    #print(datetime.timedelta(datetime.datetime(2018, 10, 19, 5, 15, 0),datetime.datetime(2018, 10, 18, 17, 35, 0)))
-    executeScriptsFromFile(os.path.abspath(os.path.dirname(__file__))+'/request_final_test_1.sql',datetime.datetime(2018, 10, 18, 17, 35, 0),datetime.datetime(2018, 10, 19, 5, 15, 0),'1 11:40:00',nbr_heures_vol,'CDG','HDD')
     return render_template('accueil.html', title='Air Centrale - Accueil')
 
 @app.route('/ressources')
