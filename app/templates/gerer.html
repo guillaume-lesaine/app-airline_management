@@ -18,6 +18,8 @@
             <li><a id="btn_employes" >Employés</a></li>
             <li><a id="btn_vols" >Vols</a></li>
             <li><a id="btn_departs" >Départs</a></li>
+            <li><a id="btn_passagers" >Passagers</a></li>
+            <li><a id="btn_billets" >Billets</a></li>
           </ul>
       </div>
     </div>
@@ -94,7 +96,49 @@
           <td>{{ depart.num_vol}}</td>
           <td>{{ depart.pilotes}}</td>
           <td>{{ depart.equipage}}</td>
-          <td><input type="checkbox" name="C" value={{ depart.num_vol}} ></td>
+          <td><input type="checkbox" name="C" value={{ depart.id_departs}} ></td>
+      </tr>
+      {% endfor %}
+  </tbody>
+  </table>
+  <table id="table_passagers" class="table" style="display:none">
+  <thead>
+      <tr>
+          <th>ID</th>
+          <th>Nom</th>
+          <th>Prénom</th>
+          <th>Pays</th>
+          <th>Supprimer</th>
+      <tr>
+  </thead>
+  <tbody>
+      {% for passager in passagers %}
+      <tr>
+          <td>{{ passager.id_passager}}</td>
+          <td>{{ passager.nom}}</td>
+          <td>{{ passager.prenom}}</td>
+          <td>{{ passager.pays}}</td>
+          <td><input type="checkbox" name="D" value={{ passager.id_passager}} ></td>
+      </tr>
+      {% endfor %}
+  </tbody>
+  </table>
+  <table id="table_billets" class="table" style="display:none">
+  <thead>
+      <tr>
+          <th>Numéro de billet</th>
+          <th>Numéro de départ</th>
+          <th>Client</th>
+          <th>Supprimer</th>
+      <tr>
+  </thead>
+  <tbody>
+      {% for billet in billets %}
+      <tr>
+          <td>{{ billet.num_billet }}</td>
+          <td>{{ billet.num_depart }}</td>
+          <td>{{ billet.client }}</td>
+          <td><input type="checkbox" name="E" value={{ billet.num_billet }} ></td>
       </tr>
       {% endfor %}
   </tbody>
@@ -104,31 +148,45 @@
       $('#btn_employes').click(function(){
         $('#table_vols').hide();
         $('#table_departs').hide();
+        $('#table_passagers').hide();
+        $('#table_billets').hide();
         $('#table_employes').toggle();
-        $('#table_vols').hide();
-        $('#table_departs').hide();
       });
       $('#btn_vols').click(function(){
         $('#table_employes').hide();
         $('#table_departs').hide();
+        $('#table_passagers').hide();
+        $('#table_billets').hide();
         $('#table_vols').toggle();
-        $('#table_employes').hide();
-        $('#table_departs').hide();
       });
       $('#btn_departs').click(function(){
         $('#table_employes').hide();
         $('#table_vols').hide();
+        $('#table_passagers').hide();
+        $('#table_billets').hide();
         $('#table_departs').toggle();
+      });
+      $('#btn_passagers').click(function(){
         $('#table_employes').hide();
         $('#table_vols').hide();
+        $('#table_billets').hide();
+        $('#table_departs').hide();
+        $('#table_passagers').toggle();
+      });
+      $('#btn_billets').click(function(){
+        $('#table_employes').hide();
+        $('#table_vols').hide();
+        $('#table_passagers').hide();
+        $('#table_departs').hide();
+        $('#table_billets').toggle();
       });
       $("#btnGetSelected").click(function(){
         var a = getCheckedCheckboxes('A');
         var b = getCheckedCheckboxes('B');
         var c = getCheckedCheckboxes('C');
-        console.log(a);
-        console.log(b);
-        var submitObject = {'A': a, 'B': b, 'C':c};
+        var d = getCheckedCheckboxes('D');
+        var e = getCheckedCheckboxes('E');
+        var submitObject = {'A': a, 'B': b, 'C':c, 'D':d ,'E':e};
         $.ajax({
           url: "/get_suppression",
           type: "POST",

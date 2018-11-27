@@ -3,15 +3,15 @@
 
 
 {% block app_content %}
-<div>
-  <h1>Réservation d'un billet <button id="btn_information" type="button" class="btn btn-default btn-xs">?</button></h1>
-</div>
-<br>
-<div id="information_form" style="display:none">
-  Réserver un billet pour un passager en sélectionnant un départ.
-</div>
-<br>
-<div class="row" style="float: left; margin-bottom:20px; width: 100%">
+  <div>
+    <h1>Réservation d'un billet <button id="btn_information" type="button" class="btn btn-default btn-xs">?</button></h1>
+  </div>
+  <br>
+  <div id="information_form" style="display:none">
+    Réserver un billet pour un passager en sélectionnant un départ.
+  </div>
+  <br>
+  <div class="row" style="float: left; margin-bottom:20px; width: 100%">
       <form class="form" method="post" role="form">
         <table id="table_departs" class="table">
         <thead>
@@ -23,7 +23,7 @@
                 <th> </th>
                 <th>Liaison effectuée</th>
                 <th>Places libres</th>
-                <th>Supprimer</th>
+                <th>Sélectionner</th>
             <tr>
         </thead>
         <tbody>
@@ -45,12 +45,12 @@
         {{ wtf.form_errors(form, hiddens="only") }}
         {{ wtf.form_field(form.submit) }}
     </form>
-</div>
-<script>
-  $(document).ready(function(){
-    $('#btn_information').click(function(){
-      $('#information_form').toggle();
+  </div>
+  <script>
+    $(document).ready(function(){
+      $('#btn_information').click(function(){
+        $('#information_form').toggle();
+      });
     });
-  });
-</script>
+  </script>
 {% endblock %}

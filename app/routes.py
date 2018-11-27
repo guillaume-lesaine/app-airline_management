@@ -1,17 +1,47 @@
 from flask import render_template, flash, redirect, url_for, request
 from app import app
-from app.forms import AirportCreationForm, EmployeeCreationForm, NaviguantCreationForm, VolCreationForm, DepartCreationForm, DepartConditionsCreationForm, GestionForm, BilletReservationForm, BilletConditionsReservationForm
+from app.forms import AirportCreationForm, EmployeeCreationForm, NaviguantCreationForm, VolCreationForm, DepartCreationForm, DepartConditionsCreationForm, BilletReservationForm, BilletConditionsReservationForm
 from flask_mysqldb import MySQL
 
 import datetime
+import random
+import os
 
 mysql=MySQL(app)
+
+def executeScriptsFromFile(filename,TS_DEPART_NV_VOL,TS_ARRIVEE_NV_VOL,TPS_VOL,NB_HEURES_VOL_NV_VOL,CODE_ORIGINE_NV_VOL,CODE_DESTINATION_NV_VOL):
+    cur = mysql.connection.cursor()
+    print('ok sql')
+    fd = open(filename, 'r')
+    sqlFile = fd.read()
+    fd.close()
+    sqlFile=sqlFile.replace('\n',' ')
+    sqlFile=sqlFile.replace('\t',' ')
+    sqlCommands = sqlFile.split(';')
+
+    cur.execute('SET @TS_DEPART_NV_VOL = %s',[TS_DEPART_NV_VOL])
+    #cur.execute('SET @TS_DEPART_NV_VOL = %s',[datetime.datetime(2018, 10, 18, 8, 40, 0)])
+    #cur.execute('SELECT num_vol FROM vols WHERE ts_depart = @TS_DEPART_NV_VOL' )
+
+    cur.execute('SET @TS_ARRIVEE_NV_VOL = %s',[TS_ARRIVEE_NV_VOL])
+    cur.execute('SET @TPS_VOL = %s',[TPS_VOL])
+    cur.execute('SET @NB_HEURES_VOL_NV_VOL = %s',[NB_HEURES_VOL_NV_VOL])
+    cur.execute('SET @CODE_ORIGINE_NV_VOL = %s',[CODE_ORIGINE_NV_VOL])
+    cur.execute('SET @CODE_DESTINATION_NV_VOL = %s',[CODE_DESTINATION_NV_VOL])
+    for command in sqlCommands:
+        cur.execute(command)
+        if command.strip()[0:6]=='SELECT':
+            query = cur.fetchall()
+    return(query)
 
 #------- HTML - Affichage en ligne des menus création et pilotage
 #------- HTML - Rendre la présentation de l'application de l'application dynamique avec un bouton d'aide
 @app.route('/')
 @app.route('/accueil')
 def accueil():
+    nbr_heures_vol = (int(datetime.datetime(2018, 10, 19, 5, 15, 0).strftime('%s')) - int(datetime.datetime(2018, 10, 18, 17, 35, 0).strftime('%s')))//3600
+    #print(datetime.timedelta(datetime.datetime(2018, 10, 19, 5, 15, 0),datetime.datetime(2018, 10, 18, 17, 35, 0)))
+    executeScriptsFromFile(os.path.abspath(os.path.dirname(__file__))+'/request_final_test_1.sql',datetime.datetime(2018, 10, 18, 17, 35, 0),datetime.datetime(2018, 10, 19, 5, 15, 0),'1 11:40:00',nbr_heures_vol,'CDG','HDD')
     return render_template('accueil.html', title='Air Centrale - Accueil')
 
 @app.route('/ressources')
@@ -23,7 +53,7 @@ def ressources():
 @app.route('/gerer', methods=['GET', 'POST'])
 def gerer():
     cur = mysql.connection.cursor()
-    form=GestionForm()
+    # Trouver les employés
     cur.execute("SELECT e.numero_securite_sociale, e.nom, e.prenom, e.type, n.fonction FROM employes e LEFT JOIN naviguants n ON e.numero_securite_sociale = n.numero_securite_sociale")
     data = cur.fetchall()
     employes = []
@@ -32,6 +62,7 @@ def gerer():
             employes.append({'numero_securite_sociale':x[0],'nom':x[1].upper(),'prenom':x[2],'type':x[3].title(),'fonction':x[4].title()})
         else :
             employes.append({'numero_securite_sociale':x[0],'nom':x[1].upper(),'prenom':x[2],'type':x[3].title(),'fonction':''})
+    # Trouver les vols
     cur.execute("SELECT num_vol,ts_depart,ts_arrivee,liaison FROM vols")
     vols=cur.fetchall()
     vols_display = []
@@ -40,6 +71,7 @@ def gerer():
         liaison = cur.fetchall()[0]
         liaison_display = ' - '.join((liaison[0],liaison[2]))
         vols_display.append({'num_vol':vol[0],'ville_depart':liaison[1],'ts_depart':vol[1],'ville_arrivee':liaison[3],'ts_arrivee':vol[2],'liaison':liaison_display})
+    # Trouver les départs
     cur.execute("SELECT d.id_departs,d.num_vol,e1.nom,e2.nom,e3.nom,e4.nom FROM departs d LEFT JOIN employes e1 ON d.pilote_1 = e1.numero_securite_sociale LEFT JOIN employes e2 ON d.pilote_2 = e2.numero_securite_sociale LEFT JOIN employes e3 ON d.equipage_1 = e3.numero_securite_sociale LEFT JOIN employes e4 ON d.equipage_2 = e4.numero_securite_sociale")
     departs = cur.fetchall()
     departs_display = []
@@ -51,28 +83,126 @@ def gerer():
         if membre_2 == None :
             membre_2 = ''
         departs_display.append({'id_departs':depart[0],'num_vol':depart[1],'pilotes':pilote_1.upper()+' - '+pilote_2.upper(),'equipage':membre_1.upper()+' - '+membre_2.upper()})
-    return render_template('gerer.html', title='Air Centrale - Gérer',form=form,employes=employes,vols=vols_display,departs=departs_display)
+    # Trouver les passagers
+    cur.execute("SELECT id_passager,nom,prenom,pays FROM passagers")
+    passagers=cur.fetchall()
+    passagers_display = []
+    for passager in passagers:
+        passagers_display.append({'id_passager':passager[0],'nom':passager[1].upper(),'prenom':passager[2],'pays':passager[3]})
+    # Trouver les billets
+    cur.execute("SELECT b.num_billet,b.num_depart,p.nom,p.prenom FROM billets b JOIN passagers p ON b.num_passager = p.id_passager")
+    billets=cur.fetchall()
+    billets_display = []
+    for billet in billets:
+        billets_display.append({'num_billet':billet[0],'num_depart':billet[1],'client':billet[2].upper() + ' ' + billet[3]})
+    return render_template('gerer.html', title='Air Centrale - Gérer',employes=employes,vols=vols_display,departs=departs_display,passagers=passagers_display,billets=billets_display)
 
 #------- get_suppression() - Renvoyer de l'information à l'utilisateur quand une suppression a été réalisée
 #------- get_suppression() - Couleur différente pour un message flask
 @app.route('/get_suppression', methods=['GET','POST'])
 def get_suppression():
+    # Récupération des données provenant de l'utilisateur
     deletion_dictionary=request.get_json()
     deletion_employes=deletion_dictionary['A']
     deletion_vols=deletion_dictionary['B']
     deletion_departs=deletion_dictionary['C']
+    deletion_passagers=deletion_dictionary['D']
+    deletion_billets=deletion_dictionary['E']
     cur = mysql.connection.cursor()
+
+    def function_deletion_billets(deletion_billets_list):
+        print(deletion_billets_list)
+        format_strings = ','.join(['%s'] * len(deletion_billets_list))
+        query= 'DELETE FROM billets WHERE num_billet IN (%s)' % format_strings
+        cur.execute(query, tuple(deletion_billets_list))
+        #mysql.connection.commit()
+        for billet in deletion_billets_list: # Augmenter de 1 le nombre de places disponibles dans le départ associé au billet
+            cur.execute("UPDATE departs SET nbr_places_libres = nbr_places_libres + 1 WHERE id_departs = (SELECT num_depart FROM billets WHERE num_billet = %s)",[billet])
+            #mysql.connection.commit()
+            flash('Le billet {} a été supprimé. La place est de nouveau disponible.'.format(billet),"alert alert-info")
+
+    def function_deletion_passagers(deletion_passagers_list):
+        print(deletion_passagers_list)
+        format_strings = ','.join(['%s'] * len(deletion_passagers_list))
+        query = 'SELECT num_billet FROM billets WHERE num_passager IN (%s)'
+        cur.execute(query, tuple(deletion_passagers_list))
+        deletion_billets_list=[x[0] for x in cur.fetchall()]
+        for x in deletion_passagers_list:
+            flash('Le passager numéro {} a été supprimé. Les places qu\'il occupait sont désormais libérées.'.format(x),"alert alert-info")
+        if deletion_billets_list!=[]:
+            function_deletion_billets(deletion_billets_list)
+        query = 'DELETE FROM passagers WHERE id_passager IN (%s)' % format_strings
+        cur.execute(query, tuple(deletion_passagers_list))
+        #mysql.connection.commit()
+
+    def function_deletion_departs(deletion_departs_list):
+        print(deletion_departs_list)
+        format_strings = ','.join(['%s'] * len(deletion_departs_list))
+
+        # Trouver les billets qui vont être supprimés
+        query = 'SELECT num_billet,num_depart FROM billets WHERE num_depart IN (%s)' % format_strings
+        cur.execute(query, tuple([int(x) for x in deletion_departs_list]))
+        billets = cur.fetchall()
+
+        # Supprimer les billets
+        query = 'DELETE FROM billets WHERE num_depart IN (%s)' % format_strings
+        cur.execute(query, tuple(deletion_departs_list))
+        mysql.connection.commit()
+
+        # Supprimer les départs
+        query= 'DELETE FROM departs WHERE id_departs IN (%s)' % format_strings
+        cur.execute(query, tuple(deletion_departs_list))
+        mysql.connection.commit()
+
+        # Afficher en message flash les suppressions de départs et de billets
+        for x in billets:
+            flash('Le billet {} associé au départ {} a été supprimé.'.format(x[0],x[1]),"alert alert-info")
+        for x in deletion_departs_list:
+            flash('Le départ {} a été supprimé.'.format(x[0]),"alert alert-info")
+
+    def function_deletion_vols(deletion_vols_list):
+        format_strings = ','.join(['%s'] * len(deletion_vols_list))
+        query= 'DELETE FROM vols WHERE num_vol IN (%s)' % format_strings
+        cur.execute(query, tuple(deletion_vols_list))
+        mysql.connection.commit()
+        for vol in deletion_vols_list:
+            flash('Le vol {} a été supprimé.'.format(vol),"alert alert-info")
+
+    def function_deletion_employes(deletion_employes_list):
+        # Supprimer les instances de l'employé dans la table navigant
+        for z in deletion_employes_list:
+            query = 'SELECT * FROM naviguants WHERE numero_securite_sociale = %s'
+            cur.execute(query, [z])
+            if [x[0] for x in cur.fetchall()] == []:
+                pass
+            else: # Delete from navigant
+                query= 'DELETE FROM naviguants WHERE numero_securite_sociale = %s'
+                cur.execute(query, [z])
+                mysql.connection.commit()
+
+        # Supprimer les instances de l'employé dans la table employé
+        print(deletion_employes_list)
+        format_strings = ','.join(['%s'] * len(deletion_employes_list))
+        print()
+        query= 'DELETE FROM employes WHERE numero_securite_sociale IN (%s)' % format_strings
+        cur.execute(query, tuple(deletion_employes_list))
+        mysql.connection.commit()
+        for employe in deletion_employes_list:
+            flash('L\'employée {} a été supprimé.'.format(employe),"alert alert-info")
+
+    # SUPPRIMER BILLET
+    if deletion_billets!=[]:
+        function_deletion_billets(deletion_billets)
+
+    # SUPPRIMER PASSAGER
+    if deletion_passagers!=[]:
+        function_deletion_passagers(deletion_passagers)
 
     # SUPPRIMER DEPART
     if deletion_departs!=[]:
-        format_strings = ','.join(['%s'] * len(deletion_departs))
-        query= 'DELETE FROM departs WHERE num_vol IN (%s)' % format_strings
-        cur.execute(query, tuple(deletion_departs))
-        mysql.connection.commit()
-        for depart in deletion_departs:
-            flash('Le depart {} a été supprimé.'.format(depart),"alert alert-info")
+        function_deletion_departs(deletion_departs)
 
-    # SUPPRIMER VOL
+
     # Retirer tous les vols présents dans la table départs
     if deletion_vols!=[]:
         for z in deletion_vols:
@@ -84,17 +214,13 @@ def get_suppression():
             else :
                 deletion_vols.remove(z)
                 for depart in tuple_departs:
-                    flash('Le vol {} est associé au départ numéro {}. Veuillez supprimer ce départ.'.format(z,depart[-1]),"alert alert-danger")
-    # Supprimer les instances de vols dans la table vol
-    if deletion_vols!=[]:
-        format_strings = ','.join(['%s'] * len(deletion_vols))
-        query= 'DELETE FROM vols WHERE num_vol IN (%s)' % format_strings
-        cur.execute(query, tuple(deletion_vols))
-        for vol in deletion_vols:
-            flash('Le vol {} a été supprimé.'.format(vol),"alert alert-info")
-        mysql.connection.commit()
+                    flash('Le vol {} est associé au départ numéro {}. Veuillez supprimer ce départ. Attention, la suppression d\'un départ entraîne la suppression des billets associés'.format(z,depart[-1]),"alert alert-danger")
 
-    # SUPPRIMER EMPLOYÉ
+    # SUPPRIMER VOL
+    if deletion_vols!=[]:
+        function_deletion_vols(deletion_vols)
+
+    # Retirer tous les employés présents dans la table départs
     if deletion_employes!=[]:
         # Trouver les départs concernés par les employés supprimés
         # Retirer de la liste de suppression les employés concernés par un départ
@@ -113,26 +239,9 @@ def get_suppression():
                     depart_flash=depart[0]
                     flash('{} {} apparaît dans le départ associé au numéro de vol {}. Veuillez supprimer ce départ.'.format(prenom_flash,nom_flash,depart_flash),"alert alert-danger")
 
-        # Supprimer les instances de l'employé dans la table navigant
-        for z in deletion_employes:
-            query = 'SELECT * FROM naviguants WHERE numero_securite_sociale = %s'
-            cur.execute(query, [z])
-            if [x[0] for x in cur.fetchall()] == []:
-                pass
-            else: # Delete from navigant
-                query= 'DELETE FROM naviguants WHERE numero_securite_sociale = %s'
-                cur.execute(query, [z])
-                mysql.connection.commit()
-
-        # Supprimer les instances de l'employé dans la table employé
-        print(deletion_employes)
-        format_strings = ','.join(['%s'] * len(deletion_employes))
-        print()
-        query= 'DELETE FROM employes WHERE numero_securite_sociale IN (%s)' % format_strings
-        cur.execute(query, tuple(deletion_employes))
-        mysql.connection.commit()
-        for employe in deletion_employes:
-            flash('L\'employée {} a été supprimé.'.format(employe),"alert alert-info")
+    # SUPPRIMER EMPLOYÉ
+    if deletion_employes!=[]:
+        function_deletion_employes(deletion_employes)
     return('')
 
 #------- HTML - Insérer un espace à la fin du form
@@ -163,7 +272,7 @@ def creer_employe():
             if type == 'naviguant':
                 return redirect(url_for('creer_employe_navigant',numero_securite_sociale = numero_securite_sociale))
             else:
-                return redirect('/index')
+                return redirect('/accueil')
     return render_template('creer_employe.html', title='Air Centrale - Créer employé', form=form)
 
 @app.route('/creer/employe/navigant/<numero_securite_sociale>', methods=['GET', 'POST'])
@@ -188,7 +297,7 @@ def creer_employe_navigant(numero_securite_sociale):
                 mysql.connection.commit()
                 flash('L\'employé naviguant {} a été créé.'.format(numero_securite_sociale),"alert alert-info")
                 cur.close()
-                return redirect('/index')
+                return redirect('/accueil')
     return render_template('creer_employe_navigant.html', title='Air Centrale - Créer employé naviguant', form=form)
 
 #------- VolCreationForm() + HTML - Demander un temps de vol plutôt qu'une date d'arrivée
@@ -239,7 +348,7 @@ def creer_vol():
                 mysql.connection.commit()
                 flash('Le vol numéro {} vient d\'être créé.'.format(num_vol),"alert alert-info")
                 cur.close()
-                return redirect('/index')
+                return redirect('/accueil')
     return render_template('creer_vol.html', title='Air Centrale - Créer vol', form=form)
 
 @app.route('/creer/depart', methods=['GET', 'POST'])
@@ -256,72 +365,107 @@ def creer_depart():
         vols_display.append({'num_vol':vol[0],'ville_depart':liaison[1],'ts_depart':vol[1],'ville_arrivee':liaison[3],'ts_arrivee':vol[2],'liaison':liaison_display})
     if form.validate_on_submit():
         selected_vol = request.form.getlist('selection')[0]
-        return redirect(url_for('creer_depart_conditions',selected_vol = selected_vol))
+        return redirect(url_for('creer_depart_conditions',selected_vol = selected_vol,aeroport_depart=liaison[0],aeroport_arrivee=liaison[2]))
     return render_template('creer_depart.html', title='Air Centrale - Créer départ', vols=vols_display, form=form)
 
 # creer_depart_conditions() - Requête similaire pour appareils
 #------- creer_depart_conditions() - Prendre en compte le temps du départ pour trouver la dernière position la position
 # creer_depart_conditions() - Gérer la création d'un départ intermédiaire
 # creer_depart_conditions() - Fixer un nombre de places dipsonibles et un nombre de place
-@app.route('/creer/depart/conditions/<selected_vol>', methods=['GET', 'POST'])
-def creer_depart_conditions(selected_vol):
+# creer_depart_conditions() - Incrémenter le nombre d'heures de vol d'un pilote
+@app.route('/creer/depart/conditions/<selected_vol>_<aeroport_depart>-<aeroport_arrivee>', methods=['GET', 'POST'])
+def creer_depart_conditions(selected_vol,aeroport_depart,aeroport_arrivee):
     cur = mysql.connection.cursor()
     form = DepartConditionsCreationForm()
     # Find the country to be in as well as the time for the departure
     cur.execute("SELECT a.pays,v.ts_depart,v.ts_arrivee FROM vols v JOIN liaisons l ON v.liaison = l.id_liaison JOIN aeroports a ON l.aeroport_origine = a.id_aeroports WHERE v.num_vol = %s",[selected_vol])
     pays_depart,ts_depart,ts_arrivee = cur.fetchall()[0]
+    print('ts_depart :',ts_depart)
+    print('ts_arrivee :',ts_arrivee)
+    nbr_heures_vol = (int(ts_arrivee.strftime('%s')) - int(ts_depart.strftime('%s')))//3600
+
+    tps_vol = ts_arrivee - ts_depart
+
+    ts_depart_days = ts_depart.strftime("%Y-%m-%d")
+    ts_depart_days = ts_depart_days.split('-')
+    ts_arrivee_days = ts_arrivee.strftime("%Y-%m-%d")
+    ts_arrivee_days = ts_arrivee_days.split('-')
+    ts_vol_days = (datetime.datetime(int(ts_arrivee_days[0]),int(ts_arrivee_days[1]),int(ts_arrivee_days[2]))-datetime.datetime(int(ts_depart_days[0]),int(ts_depart_days[1]),int(ts_depart_days[2]))).days
+    if ts_vol_days!=0:
+        tps_vol = str(ts_vol_days)+' '+tps_vol
+    else :
+        tps_vol = tps_vol
+    print('tps_vol :',tps_vol)
+    print('nbr_heures_vol :',nbr_heures_vol)
+    print('aeroport_depart :',aeroport_depart)
+    print('aeroport_arrivee :',aeroport_arrivee)
     ts_depart_format = ts_depart
     ts_depart = int(ts_depart.strftime('%s'))
     ts_arrivee = int(ts_arrivee.strftime('%s'))
     ts_vol = ts_arrivee - ts_depart
-    # Get the list of employes
-    cur.execute("SELECT numero_securite_sociale FROM naviguants")
-    liste_numero_securite_sociale = [x[0] for x in cur.fetchall()]
-    liste_numero_securite_sociale_possibles = liste_numero_securite_sociale.copy()
-    print(liste_numero_securite_sociale_possibles)
-    pilotes_disponibles, membres_disponibles = [],[]
-    # Get the last position of every flying employe
-    for x in liste_numero_securite_sociale:
-        print('--------',x)
-        # Vérifier si l'employé est déjà enregisté sur un vol et déterminer sa position au moment du décolage du départ actuel
-        cur.execute("SELECT ts_arrivee,ville_destination,pays_destination FROM departs JOIN vols ON vols.num_vol = departs.num_vol JOIN liaisons ON vols.liaison = liaisons.id_liaison JOIN (SELECT id_aeroports AS id_aeroport_destination, code AS code_destination, nom AS nom_destination, ville AS ville_destination, pays AS pays_destination FROM aeroports) AS aeroports_destination ON liaisons.aeroport_destination = aeroports_destination.id_aeroport_destination WHERE vols.ts_arrivee = (SELECT MAX(ts_arrivee) AS ts_depart_next_flight FROM ((SELECT pilote_1 AS naviguant, ts_arrivee FROM departs JOIN vols ON departs.num_vol = vols.num_vol) UNION (SELECT pilote_2 AS naviguant, ts_arrivee FROM departs JOIN vols ON departs.num_vol = vols.num_vol) UNION (SELECT equipage_1 AS naviguant, ts_arrivee FROM departs JOIN vols ON departs.num_vol = vols.num_vol) UNION (SELECT equipage_2 AS naviguant, ts_arrivee FROM departs JOIN vols ON departs.num_vol = vols.num_vol)) AS total_naviguant WHERE total_naviguant.naviguant = %s AND ts_arrivee < %s GROUP BY naviguant)",(x,ts_depart_format))
-        data = cur.fetchall()
-        print(data)
-        cur.execute("SELECT e.nom,e.prenom,n.fonction,e.ville,e.pays FROM employes e JOIN naviguants n ON e.numero_securite_sociale = n.numero_securite_sociale WHERE e.numero_securite_sociale = %s",[x])
-        data_identite = cur.fetchall()
-        if data != ():
-            print('a')
-            nom_employe,prenom_employe,fonction_employe = data_identite[0][:3]
-            ts_arrivee_employe, ville_employe, pays_employe = data[0]
-            ts_arrivee_employe = int(ts_arrivee_employe.strftime('%s'))
-        else :
-            print('b')
-            nom_employe,prenom_employe,fonction_employe,ville_employe, pays_employe = data_identite[0]
-            ts_arrivee_employe = ts_depart # Le pilote est prêt à partir
-        # Compter les heures de vol sur les 30 jours précédants le départ
-        cur.execute("SELECT v.ts_depart, v.ts_arrivee FROM vols v JOIN departs d ON v.num_vol = d.num_vol WHERE (pilote_1 = %s OR pilote_2 = %s OR equipage_1 = %s OR equipage_2 = %s)",(x,x,x,x))
-        flights_employe = cur.fetchall()
-        flying_hours = 0
-        for z in flights_employe :
-            # Si le vol considéré a eu un départ dans les 30 jours précédants l'arrivée du départ en cours de création, comptabilisé les heures de vol
-            if (ts_arrivee - 30*24*3600) < int(z[0].strftime('%s')):
-                flying_hours = flying_hours + (int(z[1].strftime('%s')) - int(z[0].strftime('%s')))
-            else :
-                pass
-        if pays_employe != pays_depart or (ts_arrivee_employe < (ts_depart - 72*3600) and ts_arrivee_employe!=ts_depart): # Si (le pilote n'est pas dans le pays de départ) ou (qu'il y est mais pas dans les 72 dernières heures et qu'il n'y habite pas)
-            liste_numero_securite_sociale_possibles.remove(x)
-            print(0)
-            print('pays_employe :',pays_employe)
-            print('pays_depart :',pays_depart)
-        elif flying_hours >= (30*24*3600 - ts_vol): # Si dans les 30 jours précédants l'arrivée du départ actuel, le pilote a fait plus de (30h - durée du vol prévu) ne pas le considérer
-            liste_numero_securite_sociale_possibles.remove(x)
-            print(1)
-        else :
-            print(2)
-            if fonction_employe == 'pilote':
-                pilotes_disponibles.append({'numero_securite_sociale':x,'nom':nom_employe,'prenom':prenom_employe,'fonction':fonction_employe})
-            else:
-                membres_disponibles.append({'numero_securite_sociale':x,'nom':nom_employe,'prenom':prenom_employe,'fonction':fonction_employe})
+    query = executeScriptsFromFile(os.path.abspath(os.path.dirname(__file__))+'/request_final_test_2.sql',ts_depart,ts_arrivee,tps_vol,nbr_heures_vol,aeroport_depart,aeroport_arrivee)
+    pilotes_disponibles=[]
+    membres_disponibles=[]
+    for employe in query :
+        nom_employe = employe[0]
+        prenom_employe = employe[1]
+        fonction_employe = employe[2]
+        numero_securite_sociale = employe[3]
+        if fonction_employe =='pilote':
+            pilotes_disponibles.append({'numero_securite_sociale':numero_securite_sociale,'nom':nom_employe,'prenom':prenom_employe,'fonction':fonction_employe})
+        else:
+            membres_disponibles.append({'numero_securite_sociale':numero_securite_sociale,'nom':nom_employe,'prenom':prenom_employe,'fonction':fonction_employe})
+    print(query)
+    print('La requête est passée')
+    ## Get the list of employes
+    #cur.execute("SELECT numero_securite_sociale FROM naviguants")
+    #liste_numero_securite_sociale = [x[0] for x in cur.fetchall()]
+    #liste_numero_securite_sociale_possibles = liste_numero_securite_sociale.copy()
+    #print(liste_numero_securite_sociale_possibles)
+    #pilotes_disponibles, membres_disponibles = [],[]
+    # for x in liste_numero_securite_sociale:
+    #     print('--------',x)
+    #     # Get the last position of every flying employe
+    #     # Vérifier si l'employé est déjà enregisté sur un vol et déterminer sa position au moment du décolage du départ actuel
+    #     cur.execute("SELECT ts_arrivee,ville_destination,pays_destination FROM departs JOIN vols ON vols.num_vol = departs.num_vol JOIN liaisons ON vols.liaison = liaisons.id_liaison JOIN (SELECT id_aeroports AS id_aeroport_destination, code AS code_destination, nom AS nom_destination, ville AS ville_destination, pays AS pays_destination FROM aeroports) AS aeroports_destination ON liaisons.aeroport_destination = aeroports_destination.id_aeroport_destination WHERE vols.ts_arrivee = (SELECT MAX(ts_arrivee) AS ts_depart_next_flight FROM ((SELECT pilote_1 AS naviguant, ts_arrivee FROM departs JOIN vols ON departs.num_vol = vols.num_vol) UNION (SELECT pilote_2 AS naviguant, ts_arrivee FROM departs JOIN vols ON departs.num_vol = vols.num_vol) UNION (SELECT equipage_1 AS naviguant, ts_arrivee FROM departs JOIN vols ON departs.num_vol = vols.num_vol) UNION (SELECT equipage_2 AS naviguant, ts_arrivee FROM departs JOIN vols ON departs.num_vol = vols.num_vol)) AS total_naviguant WHERE total_naviguant.naviguant = %s AND ts_arrivee < %s GROUP BY naviguant)",(x,ts_depart_format))
+    #     data = cur.fetchall()
+    #     print(data)
+    #     cur.execute("SELECT e.nom,e.prenom,n.fonction,e.ville,e.pays FROM employes e JOIN naviguants n ON e.numero_securite_sociale = n.numero_securite_sociale WHERE e.numero_securite_sociale = %s",[x])
+    #     data_identite = cur.fetchall()
+    #     if data != ():
+    #         print('a')
+    #         nom_employe,prenom_employe,fonction_employe = data_identite[0][:3]
+    #         ts_arrivee_employe, ville_employe, pays_employe = data[0]
+    #         ts_arrivee_employe = int(ts_arrivee_employe.strftime('%s'))
+    #     else :
+    #         print('b')
+    #         nom_employe,prenom_employe,fonction_employe,ville_employe, pays_employe = data_identite[0]
+    #         ts_arrivee_employe = ts_depart # Le pilote est prêt à partir
+    #     # Compter les heures de vol sur les 30 jours précédants le départ
+    #     cur.execute("SELECT v.ts_depart, v.ts_arrivee FROM vols v JOIN departs d ON v.num_vol = d.num_vol WHERE (pilote_1 = %s OR pilote_2 = %s OR equipage_1 = %s OR equipage_2 = %s)",(x,x,x,x))
+    #     flights_employe = cur.fetchall()
+    #     flying_hours = 0
+    #     for z in flights_employe :
+    #         # Si le vol considéré a eu un départ dans les 30 jours précédants l'arrivée du départ en cours de création, comptabilisé les heures de vol
+    #         if (ts_arrivee - 30*24*3600) < int(z[0].strftime('%s')):
+    #             flying_hours = flying_hours + (int(z[1].strftime('%s')) - int(z[0].strftime('%s')))
+    #         else :
+    #             pass
+    #
+    #     if pays_employe != pays_depart or (ts_arrivee_employe < (ts_depart - 72*3600) and ts_arrivee_employe!=ts_depart): # Si (le pilote n'est pas dans le pays de départ) ou (qu'il y est mais pas dans les 72 dernières heures et qu'il n'y habite pas)
+    #         liste_numero_securite_sociale_possibles.remove(x)
+    #         print(0)
+    #         print('pays_employe :',pays_employe)
+    #         print('pays_depart :',pays_depart)
+    #     elif flying_hours >= (30*24*3600 - ts_vol): # Si dans les 30 jours précédants l'arrivée du départ actuel, le pilote a fait plus de (30h - durée du vol prévu) ne pas le considérer
+    #         liste_numero_securite_sociale_possibles.remove(x)
+    #         print(1)
+    #     else :
+    #         print(2)
+    #         if fonction_employe == 'pilote':
+    #             pilotes_disponibles.append({'numero_securite_sociale':x,'nom':nom_employe,'prenom':prenom_employe,'fonction':fonction_employe})
+    #         else:
+    #             membres_disponibles.append({'numero_securite_sociale':x,'nom':nom_employe,'prenom':prenom_employe,'fonction':fonction_employe})
     # Définition des appareils disponibles
     cur.execute("SELECT num_immatriculation FROM appareils")
     data = [x[0] for x in cur.fetchall()]
@@ -349,7 +493,7 @@ def creer_depart_conditions(selected_vol):
                 membres.append(None)
             cur.execute("INSERT INTO departs(num_vol,pilote_1,pilote_2,equipage_1,equipage_2,nbr_places_libres,nbr_places_occupees,immatriculation_appareil) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",(selected_vol,pilotes[0],pilotes[1],membres[0],membres[1],0,0,immatriculation_appareil))
             mysql.connection.commit()
-            return redirect('/index')
+            return redirect('/accueil')
     # Less than 30 hours of flight with addition
     # In the right country at the right moment
     return render_template('creer_depart_conditions.html', title='Air Centrale - Créer départ conditions', form = form, pilotes_disponibles = pilotes_disponibles,membres_disponibles = membres_disponibles)
@@ -419,23 +563,61 @@ def reserver_billet():
         cur.execute("SELECT a1.code ,a1.pays , a2.code, a2.pays FROM liaisons l JOIN aeroports a1 ON l.aeroport_origine = a1.id_aeroports JOIN aeroports a2 ON l.aeroport_destination = a2.id_aeroports WHERE l.id_liaison = %s",[depart[3]])
         liaison = cur.fetchall()[0]
         liaison_display = ' - '.join((liaison[0],liaison[2]))
-        departs_display.append({'id_depart':depart[0],'ville_depart':liaison[1],'ts_depart':depart[1],'ville_arrivee':liaison[3],'ts_arrivee':depart[2],'liaison':liaison_display,'places_libres':depart[3]})
+        departs_display.append({'id_depart':depart[0],'ville_depart':liaison[1],'ts_depart':depart[1],'ville_arrivee':liaison[3],'ts_arrivee':depart[2],'liaison':liaison_display,'places_libres':depart[4]})
     if form.validate_on_submit():
         selected_depart = request.form.getlist('selection')[0]
-        return redirect(url_for('reserver_billet_conditions',selected_depart = selected_depart))
+        return redirect(url_for('reserver_billet_passager',selected_depart = selected_depart))
     return render_template('reserver_billet.html', title='Air Centrale - Reserver billet',form=form,departs=departs_display)
 
-# reserver_billet_conditions() - Modifier de 1 le nombre de places disponibles
-@app.route('/reserver/billet/conditions/<selected_depart>', methods=['GET', 'POST'])
-def reserver_billet_conditions(selected_depart):
+#------- reserver_billet_conditions() - Modifier de 1 le nombre de places disponibles
+# Si n'est pas dans la table passagers, l'Ajouter
+# On ne gère pas les homonyme
+@app.route('/reserver/billet/passager/<selected_depart>', methods=['GET', 'POST'])
+def reserver_billet_passager(selected_depart):
     cur = mysql.connection.cursor()
     form = BilletConditionsReservationForm()
+    # Générer les informations d'information du départ choisi
     cur.execute("SELECT d.id_departs,v.ts_depart,v.ts_arrivee,v.liaison FROM departs d JOIN vols v ON d.num_vol = v.num_vol WHERE d.id_departs = %s",[selected_depart])
     depart = cur.fetchall()[0]
     cur.execute("SELECT a1.code ,a1.pays , a2.code, a2.pays FROM liaisons l JOIN aeroports a1 ON l.aeroport_origine = a1.id_aeroports JOIN aeroports a2 ON l.aeroport_destination = a2.id_aeroports WHERE l.id_liaison = %s",[depart[3]])
     liaison = cur.fetchall()[0]
     liaison_display = ' - '.join((liaison[0],liaison[2]))
     travel_information = {'id_depart':depart[0],'ville_depart':liaison[1],'ts_depart':depart[1],'ville_arrivee':liaison[3],'ts_arrivee':depart[2],'liaison':liaison_display}
+    # Si l'utilisateur valide le formulaire :
     if form.validate_on_submit():
+        nom = form.nom.data.title()
+        prenom = form.prenom.data.title()
+        adresse = form.adresse.data
+        ville = form.ville.data
+        pays = form.pays.data
+        cur.execute("SELECT * FROM passagers WHERE ( nom = %s AND prenom = %s)",(nom,prenom))
+        passagers = cur.fetchall()
+        # Ajouter le passager si il n'existe pas dans la base
+        if passagers == ():
+            cur.execute("INSERT INTO passagers(nom,prenom,adresse,ville,pays) VALUES (%s, %s, %s, %s, %s)",(nom,prenom,adresse,ville,pays))
+            mysql.connection.commit()
+            flash('{} {} a été ajouté à la base de données comme passager.'.format(prenom,nom),"alert alert-info")
+        else : # Si le passager existe déjà dans la base, ne rien faire
+            pass
+        # Générer un nouveau nom de billet aléatoirement en vérifiant qu'il n'existe pas déjà
+        cur.execute("SELECT num_billet FROM billets")
+        num_billets_existants = [x[0] for x in cur.fetchall()]
+        num_billet = random.randint(10000000, 99999999)
+        while num_billet in num_billets_existants :
+            num_billet = random.randint(10000000, 99999999)
+        # Générer le temps d'émission du billet
+        ts_emission = datetime.datetime.now()
+        # Générer le numéro de départ du billet
+        num_depart = selected_depart
+        # Obtenir le numéro du passager (nécessite le commit dans "if passagers == ()")
+        cur.execute("SELECT id_passager FROM passagers WHERE (nom = %s AND prenom = %s)",(nom,prenom))
+        num_passager = cur.fetchall()[0][0]
+        # Insérer le nouveau billet
+        cur.execute("INSERT INTO billets(num_billet,ts_emission,num_depart,num_passager) VALUES (%s, %s, %s, %s)",(int(num_billet),ts_emission,num_depart,int(num_passager)))
+        mysql.connection.commit()
+        # Soustraire 1 du nombre de places disponibles du départ correspondant dans la table départs
+        cur.execute("UPDATE departs SET nbr_places_libres = nbr_places_libres - 1 WHERE id_departs = %s",[num_depart])
+        mysql.connection.commit()
+        flash('Le billet {} appartenant à {} {} a été enregistré.'.format(num_billet,prenom,nom),"alert alert-info")
         return redirect(url_for('accueil'))
-    return render_template('reserver_billet_conditions.html', title='Air Centrale - Reserver billet',form=form,depart=travel_information)
+    return render_template('reserver_billet_passager.html', title='Air Centrale - Reserver billet',form=form,depart=travel_information)

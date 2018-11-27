@@ -94,11 +94,13 @@ class DepartConditionsCreationForm(FlaskForm):
     immatriculation_appareil = SelectField('Immatriculation des appareils disponibles', validators=[DataRequired()])
     submit = SubmitField('Valider')
 
-class GestionForm(FlaskForm):
-    submit = SubmitField('Valider')
-
 class BilletReservationForm(FlaskForm):
     submit = SubmitField('Valider')
 
 class BilletConditionsReservationForm(FlaskForm):
+    nom = StringField('Nom', validators=[DataRequired()])
+    prenom = StringField('Prénom', validators=[DataRequired()])
+    adresse = StringField('Adresse', validators=[DataRequired()])
+    ville = StringField('Ville', validators=[DataRequired()])
+    pays = StringField('Pays', validators=[DataRequired()])
     submit = SubmitField('Valider')
