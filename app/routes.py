@@ -401,7 +401,7 @@ def creer_depart_conditions(selected_vol,aeroport_depart,aeroport_arrivee):
     ts_depart = int(ts_depart.strftime('%s'))
     ts_arrivee = int(ts_arrivee.strftime('%s'))
     ts_vol = ts_arrivee - ts_depart
-    query = executeScriptsFromFile(os.path.abspath(os.path.dirname(__file__))+'/request_final_test_2.sql',ts_depart,ts_arrivee,tps_vol,nbr_heures_vol,aeroport_depart,aeroport_arrivee)
+    query = executeScriptsFromFile(os.path.abspath(os.path.dirname(__file__))+'/requete_depart_conditions.sql',ts_depart,ts_arrivee,tps_vol,nbr_heures_vol,aeroport_depart,aeroport_arrivee)
     pilotes_disponibles=[]
     membres_disponibles=[]
     for employe in query :
