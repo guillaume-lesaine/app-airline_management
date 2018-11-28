@@ -29,6 +29,7 @@ def executeScriptsFromFile(filename,TS_DEPART_NV_VOL,TS_ARRIVEE_NV_VOL,TPS_VOL,N
     cur.execute('SET @CODE_ORIGINE_NV_VOL = %s',[CODE_ORIGINE_NV_VOL])
     cur.execute('SET @CODE_DESTINATION_NV_VOL = %s',[CODE_DESTINATION_NV_VOL])
     for command in sqlCommands:
+        print(command)
         cur.execute(command)
         if command.strip()[0:6]=='SELECT':
             query = cur.fetchall()
@@ -113,15 +114,16 @@ def get_suppression():
 
     def function_deletion_billets(deletion_billets_list):
         print(deletion_billets_list)
-        format_strings = ','.join(['%s'] * len(deletion_billets_list))
-        query= 'DELETE FROM billets WHERE num_billet IN (%s)' % format_strings
-        cur.execute(query, tuple(deletion_billets_list))
-        mysql.connection.commit()
         for billet in deletion_billets_list:
             print('-------',billet) # Augmenter de 1 le nombre de places disponibles dans le départ associé au billet
             cur.execute("UPDATE departs SET nbr_places_libres = nbr_places_libres + 1 WHERE id_departs = (SELECT num_depart FROM billets WHERE num_billet = %s)",[int(billet)])
             mysql.connection.commit()
-            flash('Le billet {} a été supprimé. La place est de nouveau disponible.'.format(billet),"alert alert-info")
+        format_strings = ','.join(['%s'] * len(deletion_billets_list))
+        query= 'DELETE FROM billets WHERE num_billet IN (%s)' % format_strings
+        cur.execute(query, tuple(deletion_billets_list))
+        mysql.connection.commit()
+        flash('Le billet {} a été supprimé. La place est de nouveau disponible.'.format(billet),"alert alert-info")
+
 
     def function_deletion_passagers(deletion_passagers_list):
         deletion_passagers_list = [int(x) for x in deletion_passagers_list]
@@ -474,7 +476,14 @@ def creer_depart_conditions(selected_vol,aeroport_depart,aeroport_arrivee):
     #         else:
     #             membres_disponibles.append({'numero_securite_sociale':x,'nom':nom_employe,'prenom':prenom_employe,'fonction':fonction_employe})
     # Définition des appareils disponibles
+
     cur.execute("SELECT num_immatriculation FROM appareils")
+    query = executeScriptsFromFile(os.path.abspath(os.path.dirname(__file__))+'/requete_appareils_disponibles.sql',ts_depart,ts_arrivee,tps_vol,nbr_heures_vol,aeroport_depart,aeroport_arrivee)
+    print()
+    print()
+    print(query)
+    print()
+    print()
     data = [x[0] for x in cur.fetchall()]
     choices_immatriculation_appareil=[('',' - ')]+[(x,x) for x in data]
     form.immatriculation_appareil.choices=choices_immatriculation_appareil
