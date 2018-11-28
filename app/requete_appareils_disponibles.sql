@@ -42,17 +42,15 @@ JOIN (
 	SELECT id_aeroports AS id_aeroport_destination,
 		code AS code_destination,
 		nom AS nom_destination
-	FROM airline.aeroports
+	FROM aeroports
     ) AS aeroports_destination
  	ON liaisons.aeroport_destination = aeroports_destination.id_aeroport_destination
 JOIN (
 	SELECT id_aeroports AS id_aeroport_origine,
 		code AS code_origine,
-		nom AS nom_origine FROM airline.aeroports
+		nom AS nom_origine FROM aeroports
      ) AS aeroports_origine
  	ON liaisons.aeroport_origine = aeroports_origine.id_aeroport_origine;
-
-# -----------------------------
 
 CREATE TEMPORARY TABLE appareils_last_flight
 SELECT immatriculation,
@@ -92,17 +90,15 @@ JOIN (
 	SELECT id_aeroports AS id_aeroport_destination,
 		code AS code_destination,
 		nom AS nom_destination
-	FROM airline.aeroports
+	FROM aeroports
     ) AS aeroports_destination
  	ON liaisons.aeroport_destination = aeroports_destination.id_aeroport_destination
 JOIN (
 	SELECT id_aeroports AS id_aeroport_origine,
 		code AS code_origine,
-		nom AS nom_origine FROM airline.aeroports
+		nom AS nom_origine FROM aeroports
      ) AS aeroports_origine
  	ON liaisons.aeroport_origine = aeroports_origine.id_aeroport_origine;
-
-# -----------------------------
 
 SELECT *
 FROM (
@@ -130,13 +126,13 @@ FROM (
 			SELECT id_aeroports AS id_aeroport_destination,
 				code AS code_destination,
 				nom AS nom_destination
-			FROM airline.aeroports
+			FROM aeroports
 			) AS aeroports_destination
 			ON liaisons.aeroport_destination = aeroports_destination.id_aeroport_destination
 		LEFT JOIN (
 			SELECT id_aeroports AS id_aeroport_origine,
 				code AS code_origine,
-				nom AS nom_origine FROM airline.aeroports
+				nom AS nom_origine FROM aeroports
 			 ) AS aeroports_origine
 			ON liaisons.aeroport_origine = aeroports_origine.id_aeroport_origine
 		LEFT JOIN appareils_next_flight ON departs.immatriculation = appareils_next_flight.immatriculation
@@ -162,4 +158,4 @@ FROM (
 
 DROP TEMPORARY TABLE appareils_no_flight;
 DROP TEMPORARY TABLE appareils_next_flight;
-DROP TEMPORARY TABLE appareils_last_flight;
+DROP TEMPORARY TABLE appareils_last_flight
