@@ -75,6 +75,10 @@ def gerer():
     for depart in departs:
         pilote_1,pilote_2 = depart[2:4]
         membre_1,membre_2 = depart[4:6]
+        if pilote_1 == None :
+            pilote_1 = ''
+        if membre_1 == None :
+            membre_1 = ''
         if pilote_2 == None :
             pilote_2 = ''
         if membre_2 == None :
@@ -113,8 +117,9 @@ def get_suppression():
         query= 'DELETE FROM billets WHERE num_billet IN (%s)' % format_strings
         cur.execute(query, tuple(deletion_billets_list))
         mysql.connection.commit()
-        for billet in deletion_billets_list: # Augmenter de 1 le nombre de places disponibles dans le départ associé au billet
-            cur.execute("UPDATE departs SET nbr_places_libres = nbr_places_libres + 1 WHERE id_departs = (SELECT num_depart FROM billets WHERE num_billet = %s)",[billet])
+        for billet in deletion_billets_list:
+            print('-------',billet) # Augmenter de 1 le nombre de places disponibles dans le départ associé au billet
+            cur.execute("UPDATE departs SET nbr_places_libres = nbr_places_libres + 1 WHERE id_departs = (SELECT num_depart FROM billets WHERE num_billet = %s)",[int(billet)])
             mysql.connection.commit()
             flash('Le billet {} a été supprimé. La place est de nouveau disponible.'.format(billet),"alert alert-info")
 
@@ -155,7 +160,7 @@ def get_suppression():
         for x in billets:
             flash('Le billet {} associé au départ {} a été supprimé.'.format(x[0],x[1]),"alert alert-info")
         for x in deletion_departs_list:
-            flash('Le départ {} a été supprimé.'.format(x[0]),"alert alert-info")
+            flash('Le départ {} a été supprimé.'.format(x),"alert alert-info")
 
     def function_deletion_vols(deletion_vols_list):
         format_strings = ','.join(['%s'] * len(deletion_vols_list))
@@ -352,7 +357,7 @@ def creer_vol():
 def creer_depart():
     cur = mysql.connection.cursor()
     form = DepartCreationForm()
-    cur.execute("SELECT num_vol,ts_depart,ts_arrivee,liaison FROM vols v WHERE v.num_vol NOT IN (SELECT d.num_vol FROM departs d)")
+    cur.execute("SELECT num_vol,ts_depart,ts_arrivee,liaison FROM vols v WHERE (v.num_vol NOT IN (SELECT d.num_vol FROM departs d) AND ts_depart>NOW())")
     vols=cur.fetchall()
     print('vols :',vols)
     vols_display = []
@@ -474,12 +479,13 @@ def creer_depart_conditions(selected_vol,aeroport_depart,aeroport_arrivee):
     choices_immatriculation_appareil=[('',' - ')]+[(x,x) for x in data]
     form.immatriculation_appareil.choices=choices_immatriculation_appareil
     if form.validate_on_submit():
-        pass
-        # pilotes = request.form.getlist('pilotes')
-        # nbr_pilotes = len(pilotes)
-        # membres = request.form.getlist('membres')
-        # nbr_membres = len(membres)
-        # immatriculation_appareil = form.immatriculation_appareil.data
+        pilotes = request.form.getlist('pilotes')
+        nbr_pilotes = len(pilotes)
+        membres = request.form.getlist('membres')
+        nbr_membres = len(membres)
+        print('pilotes :',pilotes)
+        print('membres :',membres)
+        immatriculation_appareil = form.immatriculation_appareil.data
         # if nbr_pilotes > 2:
         #     flash('Vous pouvez sélectionner deux pilotes maximum')
         # if nbr_membres > 2:
@@ -489,14 +495,20 @@ def creer_depart_conditions(selected_vol,aeroport_depart,aeroport_arrivee):
         # if nbr_membres == 0:
         #     flash('Veuillez sélectionner des membres d\'équipage')
         # if nbr_pilotes <= 2 and nbr_membres <= 2 and nbr_pilotes != 0 and nbr_membres != 0:
-        #     flash('Un nouveau départ vient d\'être associé au vol numéro {}'.format(selected_vol))
+        flash('Un nouveau départ vient d\'être associé au vol numéro {}'.format(selected_vol),"alert alert-info")
+        while len(pilotes) < 2:
+            pilotes.append(None)
+        while len(membres) < 2:
+            membres.append(None)
+        print('pilotes :',pilotes)
+        print('membres :',membres)
         #     if nbr_pilotes == 1 :
         #         pilotes.append(None)
         #     if nbr_membres == 1 :
         #         membres.append(None)
-        #     cur.execute("INSERT INTO departs(num_vol,pilote_1,pilote_2,equipage_1,equipage_2,nbr_places_libres,nbr_places_occupees,immatriculation_appareil) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",(selected_vol,pilotes[0],pilotes[1],membres[0],membres[1],0,0,immatriculation_appareil))
-        #     mysql.connection.commit()
-        #     return redirect('/accueil')
+        cur.execute("INSERT INTO departs(num_vol,pilote_1,pilote_2,equipage_1,equipage_2,nbr_places_libres,nbr_places_occupees,immatriculation_appareil) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",(selected_vol,pilotes[0],pilotes[1],membres[0],membres[1],100,0,immatriculation_appareil))
+        mysql.connection.commit()
+        return redirect('/accueil')
     # Less than 30 hours of flight with addition
     # In the right country at the right moment
     return render_template('creer_depart_conditions.html', title='Air Centrale - Créer départ conditions', form = form, pilotes_disponibles = pilotes_disponibles,membres_disponibles = membres_disponibles)
@@ -559,7 +571,7 @@ def visualiser_personnel():
 def reserver_billet():
     cur = mysql.connection.cursor()
     form = BilletReservationForm()
-    cur.execute("SELECT d.id_departs,v.ts_depart,v.ts_arrivee,v.liaison,d.nbr_places_libres FROM vols v JOIN departs d ON v.num_vol = d.num_vol WHERE d.nbr_places_libres > 0")
+    cur.execute("SELECT d.id_departs,v.ts_depart,v.ts_arrivee,v.liaison,d.nbr_places_libres FROM vols v JOIN departs d ON v.num_vol = d.num_vol WHERE (d.nbr_places_libres > 0 and v.ts_depart > NOW())")
     departs=cur.fetchall()
     departs_display = []
     for depart in departs:
@@ -616,7 +628,7 @@ def reserver_billet_passager(selected_depart):
         cur.execute("SELECT id_passager FROM passagers WHERE (nom = %s AND prenom = %s)",(nom,prenom))
         num_passager = cur.fetchall()[0][0]
         # Insérer le nouveau billet
-        cur.execute("INSERT INTO billets(num_billet,ts_emission,num_depart,num_passager) VALUES (%s, %s, %s, %s)",(int(num_billet),ts_emission,num_depart,int(num_passager)))
+        cur.execute("INSERT INTO billets(num_billet,ts_emission,num_depart,num_passager) VALUES (%s, %s, %s, %s)",(int(num_billet),ts_emission,int(num_depart),int(num_passager)))
         mysql.connection.commit()
         # Soustraire 1 du nombre de places disponibles du départ correspondant dans la table départs
         cur.execute("UPDATE departs SET nbr_places_libres = nbr_places_libres - 1 WHERE id_departs = %s",[num_depart])
