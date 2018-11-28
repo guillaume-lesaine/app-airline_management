@@ -46,14 +46,14 @@ def ressources():
 def gerer():
     cur = mysql.connection.cursor()
     # Trouver les employés
-    cur.execute("SELECT e.numero_securite_sociale, e.nom, e.prenom, e.type, n.fonction FROM employes e LEFT JOIN naviguants n ON e.numero_securite_sociale = n.numero_securite_sociale")
+    cur.execute("SELECT e.numero_securite_sociale, e.nom, e.prenom, e.type, n.fonction, n.nbr_heures_vol FROM employes e LEFT JOIN naviguants n ON e.numero_securite_sociale = n.numero_securite_sociale")
     data = cur.fetchall()
     employes = []
     for x in data :
         if x[4]!=None:
-            employes.append({'numero_securite_sociale':x[0],'nom':x[1].upper(),'prenom':x[2],'type':x[3].title(),'fonction':x[4].title()})
+            employes.append({'numero_securite_sociale':x[0],'nom':x[1].upper(),'prenom':x[2],'type':x[3].title(),'fonction':x[4].title(),'heures_vol':x[5]})
         else :
-            employes.append({'numero_securite_sociale':x[0],'nom':x[1].upper(),'prenom':x[2],'type':x[3].title(),'fonction':''})
+            employes.append({'numero_securite_sociale':x[0],'nom':x[1].upper(),'prenom':x[2],'type':x[3].title(),'fonction':'','heures_vol':''})
     # Trouver les vols
     cur.execute("SELECT num_vol,ts_depart,ts_arrivee,liaison FROM vols")
     vols=cur.fetchall()
@@ -64,7 +64,7 @@ def gerer():
         liaison_display = ' - '.join((liaison[0],liaison[2]))
         vols_display.append({'num_vol':vol[0],'ville_depart':liaison[1],'ts_depart':vol[1],'ville_arrivee':liaison[3],'ts_arrivee':vol[2],'liaison':liaison_display})
     # Trouver les départs
-    cur.execute("SELECT d.id_departs,d.num_vol,e1.nom,e2.nom,e3.nom,e4.nom FROM departs d LEFT JOIN employes e1 ON d.pilote_1 = e1.numero_securite_sociale LEFT JOIN employes e2 ON d.pilote_2 = e2.numero_securite_sociale LEFT JOIN employes e3 ON d.equipage_1 = e3.numero_securite_sociale LEFT JOIN employes e4 ON d.equipage_2 = e4.numero_securite_sociale")
+    cur.execute("SELECT d.id_departs,d.num_vol,e1.nom,e2.nom,e3.nom,e4.nom,d.immatriculation,d.nbr_places_libres FROM departs d LEFT JOIN employes e1 ON d.pilote_1 = e1.numero_securite_sociale LEFT JOIN employes e2 ON d.pilote_2 = e2.numero_securite_sociale LEFT JOIN employes e3 ON d.equipage_1 = e3.numero_securite_sociale LEFT JOIN employes e4 ON d.equipage_2 = e4.numero_securite_sociale")
     departs = cur.fetchall()
     departs_display = []
     for depart in departs:
@@ -78,7 +78,7 @@ def gerer():
             pilote_2 = ''
         if membre_2 == None :
             membre_2 = ''
-        departs_display.append({'id_departs':depart[0],'num_vol':depart[1],'pilotes':pilote_1.upper()+' - '+pilote_2.upper(),'equipage':membre_1.upper()+' - '+membre_2.upper()})
+        departs_display.append({'id_departs':depart[0],'num_vol':depart[1],'pilotes':pilote_1.upper()+' - '+pilote_2.upper(),'equipage':membre_1.upper()+' - '+membre_2.upper(),'immatriculation':depart[6],'nbr_places_libres':depart[7]})
     # Trouver les passagers
     cur.execute("SELECT id_passager,nom,prenom,pays FROM passagers")
     passagers=cur.fetchall()
@@ -145,6 +145,25 @@ def get_suppression():
         cur.execute(query, tuple(deletion_departs_list))
         mysql.connection.commit()
 
+        #Décrémenter les heures de vol du personnel navigant
+        for depart in deletion_departs_list:
+            print(depart)
+            cur.execute("SELECT v.ts_depart,v.ts_arrivee FROM vols v JOIN departs d ON v.num_vol = d.num_vol WHERE id_departs = %s",[depart])
+            query = cur.fetchall()[0]
+            ts_depart,ts_arrivee = query
+            print(ts_depart,ts_arrivee)
+            ts_vol = (ts_arrivee-ts_depart).seconds//3600
+            print(ts_vol)
+            cur.execute("SELECT pilote_1,pilote_2,equipage_1,equipage_2 FROM departs WHERE id_departs = %s",[depart])
+            query = cur.fetchall()[0]
+            employes_list = [x for x in query]
+            print(query)
+            print(employes_list)
+            for navigant in employes_list :
+                query = "UPDATE naviguants SET nbr_heures_vol = nbr_heures_vol - %s WHERE numero_securite_sociale = %s"
+                cur.execute(query, (ts_vol,navigant))
+                mysql.connection.commit()
+
         # Supprimer les départs
         query= 'DELETE FROM departs WHERE id_departs IN (%s)' % format_strings
         cur.execute(query, tuple(deletion_departs_list))
@@ -200,10 +219,14 @@ def get_suppression():
 
     # Retirer tous les vols présents dans la table départs
     if deletion_vols!=[]:
-        for z in deletion_vols:
+        print('-----',deletion_vols)
+        deletion_vols_copy = [x for x in deletion_vols]
+        for z in deletion_vols_copy:
+            print(z)
             query = 'SELECT * FROM departs WHERE num_vol = %s'
             cur.execute(query, [z])
             tuple_departs=cur.fetchall()
+            print('+++++',tuple_departs)
             if tuple_departs == ():
                 pass
             else :
@@ -285,7 +308,10 @@ def creer_employe_navigant(numero_securite_sociale):
             if fonction == 'pilote' and num_licence_pilote in data:
                 flash('Le numéro de licence pilote {} existe déjà dans la base'.format(num_licence_pilote),"alert alert-danger")
             else:
-                cur.execute("INSERT INTO naviguants(numero_securite_sociale,nbr_heures_vol,fonction,num_licence_pilote) VALUES (%s, %s, %s, %s)",(numero_securite_sociale,nbr_heures_vol,fonction,num_licence_pilote))
+                if fonction == 'pilote':
+                    cur.execute("INSERT INTO naviguants(numero_securite_sociale,nbr_heures_vol,fonction,num_licence_pilote) VALUES (%s, %s, %s, %s)",(numero_securite_sociale,nbr_heures_vol,fonction,num_licence_pilote))
+                else :
+                    cur.execute("INSERT INTO naviguants(numero_securite_sociale,nbr_heures_vol,fonction,num_licence_pilote) VALUES (%s, %s, %s, %s)",(numero_securite_sociale,nbr_heures_vol,fonction,None))
                 mysql.connection.commit()
                 flash('L\'employé naviguant {} a été créé.'.format(numero_securite_sociale),"alert alert-info")
                 cur.close()
@@ -379,7 +405,7 @@ def creer_depart_conditions(selected_vol,aeroport_depart,aeroport_arrivee):
     ts_arrivee_days = ts_arrivee_days.split('-')
     ts_vol_days = (datetime.datetime(int(ts_arrivee_days[0]),int(ts_arrivee_days[1]),int(ts_arrivee_days[2]))-datetime.datetime(int(ts_depart_days[0]),int(ts_depart_days[1]),int(ts_depart_days[2]))).days
     if ts_vol_days!=0:
-        tps_vol = str(ts_vol_days)+' '+tps_vol
+        tps_vol = str(ts_vol_days)+' '+str(tps_vol)
     else :
         tps_vol = tps_vol
     print('tps_vol :',tps_vol)

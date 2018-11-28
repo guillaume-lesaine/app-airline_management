@@ -34,6 +34,7 @@
             <th>Prénom</th>
             <th>Type</th>
             <th>Fonction</th>
+            <th>Heures de vol</th>
             <th>Supprimer</th>
         <tr>
     </thead>
@@ -41,11 +42,12 @@
         {% for person in employes %}
         <tr>
           {% if person.numero_securite_sociale %}
-            <td>{{ person.numero_securite_sociale }}</td>
-            <td>{{ person.nom }}</td>
-            <td>{{ person.prenom }}</td>
-            <td>{{ person.type }}</td>
-            <td>{{ person.fonction }}</td>
+            <td>{{person.numero_securite_sociale }}</td>
+            <td>{{person.nom }}</td>
+            <td>{{person.prenom }}</td>
+            <td>{{person.type }}</td>
+            <td>{{person.fonction }}</td>
+            <td>{{person.heures_vol}}</td>
             <td><input type="checkbox" name="A" value={{ person.numero_securite_sociale }} ></td>
           {% else %}
           {% endif %}
@@ -86,16 +88,20 @@
           <th>Numéro de vol</th>
           <th>Pilotes</th>
           <th>Équipage</th>
+          <th>Appareil</th>
+          <th>Places libres</th>
           <th>Supprimer</th>
       <tr>
   </thead>
   <tbody>
       {% for depart in departs %}
       <tr>
-          <td>{{ depart.id_departs}}</td>
-          <td>{{ depart.num_vol}}</td>
-          <td>{{ depart.pilotes}}</td>
-          <td>{{ depart.equipage}}</td>
+          <td>{{depart.id_departs}}</td>
+          <td>{{depart.num_vol}}</td>
+          <td>{{depart.pilotes}}</td>
+          <td>{{depart.equipage}}</td>
+          <td>{{depart.immatriculation}}</td>
+          <td>{{depart.nbr_places_libres}}</td>
           <td><input type="checkbox" name="C" value={{ depart.id_departs}} ></td>
       </tr>
       {% endfor %}
