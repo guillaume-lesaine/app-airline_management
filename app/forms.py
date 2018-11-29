@@ -46,12 +46,17 @@ def minute_check(form,field):
 def personnel_check(form,field):
     x=field.data
     if len(x)!=2:
-        raise ValidationError('2 personnes sont nécessaires pour assurer ce poste')
+        raise ValidationError('2 personnes sont nécessaires pour assurer ce poste.')
 
 def number_check(form,field):
     x=field.data
     if type(x)!=int:
         raise ValidationError('Entrer un nombre entier !')
+
+def length_check(form,field):
+    x=str(field.data)
+    if len(x)>18:
+        raise ValidationError('Le numéro de sécurité sociale doit compter moins de 18 chiffres.')
 
 class AirportCreationForm(FlaskForm):
     code = StringField('Code de l\'aéroport', validators=[DataRequired()])
@@ -60,7 +65,7 @@ class AirportCreationForm(FlaskForm):
 
 
 class EmployeeCreationForm(FlaskForm):
-    numero_securite_sociale=IntegerField('Numéro de sécurité sociale', validators=[DataRequired('Entrer un nombre entier !')])
+    numero_securite_sociale=IntegerField('Numéro de sécurité sociale', validators=[DataRequired('Entrer un nombre entier !'),length_check])
     nom = StringField('Nom', validators=[DataRequired(),Regexp(r'[A-Za-z]', flags=0, message=u'Invalid input.')])
     prenom = StringField('Prénom', validators=[DataRequired()])
     adresse = StringField('Adresse', validators=[DataRequired()])

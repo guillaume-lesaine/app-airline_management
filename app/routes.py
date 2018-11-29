@@ -277,7 +277,7 @@ def creer_employe():
             prenom = form.prenom.data
             adresse = form.adresse.data
             ville = form.ville.data
-            pays = form.pays.data
+            pays = form.pays.data.title()
             salaire = form.salaire.data
             type = form.type.data
             flash('{} {} est désormais un employé.'.format(prenom,nom),"alert alert-info")
@@ -354,13 +354,20 @@ def creer_vol():
                 cur.close()
             else:
                 ts_depart=datetime.datetime(ts_annee_depart,ts_mois_depart,ts_jour_depart,ts_heure_depart,ts_minute_depart,0)
-                ts_arrivee = int(ts_depart.strftime('%s')) + ts_vol
-                ts_arrivee=datetime.datetime.fromtimestamp(ts_arrivee)
-                cur.execute("INSERT INTO vols(num_vol,ts_depart,ts_arrivee,liaison) VALUES (%s, %s, %s, %s)",(num_vol,ts_depart,ts_arrivee,id_liaison))
-                mysql.connection.commit()
-                flash('Le vol numéro {} vient d\'être créé.'.format(num_vol),"alert alert-info")
-                cur.close()
-                return redirect('/accueil')
+                print('temps actuel :',datetime.datetime.now())
+                print('test >:',datetime.datetime.now()>ts_depart)
+                print('test <:',datetime.datetime.now()<ts_depart)
+                print('test =:',datetime.datetime.now()==ts_depart)
+                if datetime.datetime.now()<ts_depart :
+                    ts_arrivee = int(ts_depart.strftime('%s')) + ts_vol
+                    ts_arrivee=datetime.datetime.fromtimestamp(ts_arrivee)
+                    cur.execute("INSERT INTO vols(num_vol,ts_depart,ts_arrivee,liaison) VALUES (%s, %s, %s, %s)",(num_vol,ts_depart,ts_arrivee,id_liaison))
+                    mysql.connection.commit()
+                    flash('Le vol numéro {} vient d\'être créé.'.format(num_vol),"alert alert-info")
+                    cur.close()
+                    return redirect('/accueil')
+                else:
+                    flash('La date de vol doit être postérieure au temps présent.',"alert alert-danger")
     return render_template('creer_vol.html', title='Air Centrale - Créer vol', form=form)
 
 @app.route('/creer/depart', methods=['GET', 'POST'])
@@ -378,9 +385,13 @@ def creer_depart():
         vols_display.append({'num_vol':vol[0],'ville_depart':liaison[1],'ts_depart':vol[1],'ville_arrivee':liaison[3],'ts_arrivee':vol[2],'liaison':liaison_display})
     if form.validate_on_submit():
         selected_vol = request.form.getlist('selection')
+        aeroport_depart,aeroport_arrivee='',''
+        for x in vols_display:
+            if x['num_vol']==selected_vol[0]:
+                aeroport_depart,aeroport_arrivee=tuple(x['liaison'].split(' - '))
         if selected_vol != []:
             selected_vol=selected_vol[0]
-            return redirect(url_for('creer_depart_conditions',selected_vol = selected_vol,aeroport_depart=liaison[0],aeroport_arrivee=liaison[2]))
+            return redirect(url_for('creer_depart_conditions',selected_vol = selected_vol,aeroport_depart=aeroport_depart,aeroport_arrivee=aeroport_arrivee))
         else:
             pass
     return render_template('creer_depart.html', title='Air Centrale - Créer départ', vols=vols_display, form=form)
@@ -413,6 +424,7 @@ def creer_depart_conditions(selected_vol,aeroport_depart,aeroport_arrivee):
     print('aeroport_depart :',aeroport_depart)
     print('aeroport_arrivee :',aeroport_arrivee)
     query = executeScriptsFromFile(os.path.abspath(os.path.dirname(__file__))+'/requete_depart_conditions.sql',ts_depart,ts_arrivee,tps_vol,nbr_heures_vol,aeroport_depart,aeroport_arrivee)
+    print('personnel',query)
     pilotes_disponibles=[]
     membres_disponibles=[]
     for employe in query :
@@ -425,7 +437,7 @@ def creer_depart_conditions(selected_vol,aeroport_depart,aeroport_arrivee):
         else:
             membres_disponibles.append({'numero_securite_sociale':numero_securite_sociale,'nom':nom_employe,'prenom':prenom_employe,'fonction':fonction_employe})
     query = executeScriptsFromFile(os.path.abspath(os.path.dirname(__file__))+'/requete_appareils_disponibles.sql',ts_depart,ts_arrivee,tps_vol,nbr_heures_vol,aeroport_depart,aeroport_arrivee)
-    print(query)
+    print('appareils',query)
     data = [x[0] for x in query]
     print(data)
     choices_immatriculation_appareil=[('',' - ')]+[(x,x) for x in data]

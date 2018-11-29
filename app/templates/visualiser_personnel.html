@@ -19,9 +19,7 @@
               <th>Nom</th>
               <th>Prénom</th>
               <th>Fonction</th>
-              <th>Heures de vol</th>
-              <th>Position actuelle</th>
-              <th>Selectionner</th>
+              <th>Sélectionner</th>
           <tr>
       </thead>
       <tbody>
@@ -31,8 +29,6 @@
               <td>{{ employe.nom }}</td>
               <td>{{ employe.prenom }}</td>
               <td>{{ employe.fonction }}</td>
-              <td> </td>
-              <td> </td>
               <td><input type="radio" name="select" value={{ employe.numero_securite_sociale }} ></td>
           </tr>
           {% endfor %}
