@@ -385,15 +385,16 @@ def creer_depart():
         vols_display.append({'num_vol':vol[0],'ville_depart':liaison[1],'ts_depart':vol[1],'ville_arrivee':liaison[3],'ts_arrivee':vol[2],'liaison':liaison_display})
     if form.validate_on_submit():
         selected_vol = request.form.getlist('selection')
-        aeroport_depart,aeroport_arrivee='',''
-        for x in vols_display:
-            if x['num_vol']==selected_vol[0]:
-                aeroport_depart,aeroport_arrivee=tuple(x['liaison'].split(' - '))
-        if selected_vol != []:
-            selected_vol=selected_vol[0]
-            return redirect(url_for('creer_depart_conditions',selected_vol = selected_vol,aeroport_depart=aeroport_depart,aeroport_arrivee=aeroport_arrivee))
-        else:
-            pass
+        if selected_vol!=[]:
+            aeroport_depart,aeroport_arrivee='',''
+            for x in vols_display:
+                if x['num_vol']==selected_vol[0]:
+                    aeroport_depart,aeroport_arrivee=tuple(x['liaison'].split(' - '))
+            if selected_vol != []:
+                selected_vol=selected_vol[0]
+                return redirect(url_for('creer_depart_conditions',selected_vol = selected_vol,aeroport_depart=aeroport_depart,aeroport_arrivee=aeroport_arrivee))
+            else:
+                pass
     return render_template('creer_depart.html', title='Air Centrale - Créer départ', vols=vols_display, form=form)
 
 # creer_depart_conditions() - Incrémenter le nombre d'heures de vol d'un pilote
@@ -527,8 +528,9 @@ def reserver_billet():
         liaison_display = ' - '.join((liaison[0],liaison[2]))
         departs_display.append({'id_depart':depart[0],'ville_depart':liaison[1],'ts_depart':depart[1],'ville_arrivee':liaison[3],'ts_arrivee':depart[2],'liaison':liaison_display,'places_libres':depart[4]})
     if form.validate_on_submit():
-        selected_depart = request.form.getlist('selection')[0]
-        return redirect(url_for('reserver_billet_passager',selected_depart = selected_depart))
+        selected_depart = request.form.getlist('selection')
+        if selected_depart!=[]:
+            return redirect(url_for('reserver_billet_passager',selected_depart = selected_depart[0]))
     return render_template('reserver_billet.html', title='Air Centrale - Reserver billet',form=form,departs=departs_display)
 
 @app.route('/reserver/billet/passager/<selected_depart>', methods=['GET', 'POST'])
