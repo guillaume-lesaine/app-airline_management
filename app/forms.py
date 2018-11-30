@@ -89,7 +89,7 @@ class VolCreationForm(FlaskForm):
     ts_heure_depart = StringField('Heure', validators=[DataRequired(),hour_check])
     ts_minute_depart = StringField('Minute', validators=[DataRequired(),minute_check])
     ts_vol_heures = StringField('h', validators=[])
-    ts_vol_minutes = StringField('min', validators=[])
+    ts_vol_minutes = StringField('min', validators=[minute_check])
     submit = SubmitField('Valider')
 
 class DepartCreationForm(FlaskForm):
