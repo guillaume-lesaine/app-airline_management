@@ -137,12 +137,13 @@ FROM (
 			ON liaisons.aeroport_origine = aeroports_origine.id_aeroport_origine
 		LEFT JOIN appareils_next_flight ON departs.immatriculation = appareils_next_flight.immatriculation
 		LEFT JOIN appareils_last_flight ON departs.immatriculation = appareils_last_flight.immatriculation
-		WHERE (code_destination_last_flight = @CODE_ORIGINE_NV_VOL)
+		WHERE ((code_destination_last_flight = @CODE_ORIGINE_NV_VOL)
 			AND ((code_origine_next_flight = @CODE_DESTINATION_NV_VOL
 					AND @TS_ARRIVEE_NV_VOL < ts_depart_next_flight)
 				OR (code_origine_next_flight != @CODE_DESTINATION_NV_VOL
 					AND ADDTIME(@TS_ARRIVEE_NV_VOL, @TPS_VOL) < ts_depart_next_flight)
-				OR ts_depart_next_flight IS NULL)
+				OR ts_depart_next_flight IS NULL))
+			OR (DATE_ADD(ts_arrivee_last_flight, INTERVAL 2 DAY) < @TS_DEPART_NV_VOL)
 	) AS appareils_final
 	WHERE appareils_final.immatriculation NOT IN (
 		SELECT immatriculation

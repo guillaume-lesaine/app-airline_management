@@ -227,14 +227,15 @@ FROM (
 			ON liaisons.aeroport_origine = aeroports_origine.id_aeroport_origine
 		LEFT JOIN naviguants_next_flight ON naviguants_vols.naviguant = naviguants_next_flight.naviguant
 		LEFT JOIN naviguants_last_flight ON naviguants_vols.naviguant = naviguants_last_flight.naviguant
-		WHERE (code_destination_last_flight = @CODE_ORIGINE_NV_VOL)
+		WHERE ((code_destination_last_flight = @CODE_ORIGINE_NV_VOL)
 			AND ((code_origine_next_flight = @CODE_DESTINATION_NV_VOL
 					AND @TS_ARRIVEE_NV_VOL < ts_depart_next_flight
 					AND nbr_heures_vol + @NB_HEURES_VOL_NV_VOL < 95)
 				OR (code_origine_next_flight != @CODE_DESTINATION_NV_VOL
 					AND ADDTIME(@TS_ARRIVEE_NV_VOL, @TPS_VOL) < ts_depart_next_flight
 					AND nbr_heures_vol + 2*@NB_HEURES_VOL_NV_VOL < 95)
-				OR ts_depart_next_flight IS NULL)
+				OR ts_depart_next_flight IS NULL))
+			OR (DATE_ADD(ts_arrivee_last_flight, INTERVAL 2 DAY) < @TS_DEPART_NV_VOL)
 	) AS naviguants_final
 	WHERE naviguants_final.naviguant NOT IN (
 		SELECT naviguant
