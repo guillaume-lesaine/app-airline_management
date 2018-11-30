@@ -235,7 +235,8 @@ FROM (
 					AND ADDTIME(@TS_ARRIVEE_NV_VOL, @TPS_VOL) < ts_depart_next_flight
 					AND nbr_heures_vol + 2*@NB_HEURES_VOL_NV_VOL < 95)
 				OR ts_depart_next_flight IS NULL))
-			OR (DATE_ADD(ts_arrivee_last_flight, INTERVAL 2 DAY) < @TS_DEPART_NV_VOL)
+			OR (DATE_ADD(ts_arrivee_last_flight, INTERVAL 2 DAY) < @TS_DEPART_NV_VOL 
+				AND employes.pays =  (SELECT pays FROM aeroports WHERE aeroports.code = @CODE_ORIGINE_NV_VOL))
 	) AS naviguants_final
 	WHERE naviguants_final.naviguant NOT IN (
 		SELECT naviguant
