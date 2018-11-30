@@ -2,10 +2,7 @@
 
 ## Python Requirements
 
-Python 3 is used for this application. The following modules need to be installed for the app to run.
-```
-$ pip3 install re
-```
+Python 3 is used for this application.
 
 ## Flask Requirements
 
@@ -36,17 +33,6 @@ Then fill the following line
 
 ```
 mysql --host=xxxx --user=xxxx --password=xxxx --reconnect heroku_xxxx < schema.sql
-```
-
-## Git Ignore Tool
-
-Start ignoring a file: 
-```
-$ git update-index --assume-unchanged file_name
-```
-Stop ignoring the file:
-```
-$ git update-index --no-assume-unchanged file_name
 ```
 
 ## References
