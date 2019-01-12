@@ -1,4 +1,4 @@
-# ECL_MOS4.6_GCA - Airline Management Application
+# app-airline_management- Airline Management Application
 
 ## Python Requirements
 
