@@ -1,4 +1,4 @@
-# app-airline_management- Airline Management Application
+# app-airline_management - Airline Management Application
 
 ## Python Requirements
 
